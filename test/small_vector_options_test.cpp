@@ -10,6 +10,7 @@
 #include <boost/container/small_vector.hpp>
 #include <boost/container/allocator.hpp>
 #include "lightweight_test.hpp"
+#include "container_common_tests.hpp"
 #include <boost/assert.hpp>
 using namespace boost::container;
 
@@ -145,6 +146,11 @@ void test_stored_size_type()
       typedef small_vector<unsigned char, Unsigned(-1), allocator<unsigned char>, options_t> small_vector_t;
       test_stored_size_type_impl<Unsigned, small_vector_t>();
       BOOST_CONTAINER_STATIC_ASSERT(sizeof(normal_small_vector_t) > sizeof(small_vector_t));
+   }
+   //Test growth up to max_size()
+   {
+      typedef small_vector<unsigned char, 10u, void, options_t> small_vector_t;
+      test::test_stored_size_reach_back<small_vector_t>(0u);
    }
 }
 

@@ -718,6 +718,18 @@ class deque_base
       }
    }
 
+   //Desired map size clamped to the biggest map. Throws only if the needed size does not fit.
+   size_type prot_clamp_map_size(size_type desired, size_type needed)
+   {
+      const size_type max_map = this->prot_max_map_size();
+      this->test_size_against_n_nodes(needed);
+      return desired > max_map ? max_map : desired;
+   }
+
+   //True if the map is already as big as possible
+   bool prot_map_is_max() const
+   {  return this->members_.m_map_size >= this->prot_max_map_size();  }
+
    void prot_initialize_map_and_nodes(size_type num_elements)
    {
       BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
@@ -725,8 +737,8 @@ class deque_base
       size_type num_nodes = size_type(num_elements / block_size + 1u);
 
       //Allocate at least one extra slot on each used end to avoid inmediate map reallocation on push/front insertions for non-reservable
-      const size_type map_size = dtl::max_value( size_type(InitialMapSize)
-                                               , size_type(num_nodes + size_type(!is_reservable)*(1u + size_type(!is_single_ended))));
+      const size_type map_size = this->prot_clamp_map_size(dtl::max_value( size_type(InitialMapSize)
+                                               , size_type(num_nodes + size_type(!is_reservable)*(1u + size_type(!is_single_ended)))), num_nodes);
       const size_type start_map_pos = is_single_ended ? 0u : size_type(map_size - num_nodes)/2u;
 
       //The end position must be representable in stored_size_type
@@ -786,8 +798,8 @@ class deque_base
 
       //1.5x growth, but at least the needed nodes plus one spare (+1) and the
       //single-ended back-spare (+1), matching the generic sizing.
-      const size_type new_map_size =
-         dtl::max_value(size_type(old_map_size + old_map_size/2u), size_type(new_active_nodes + 2u));
+      const size_type new_map_size = this->prot_clamp_map_size
+         (dtl::max_value(size_type(old_map_size + old_map_size/2u), size_type(new_active_nodes + 2u)), new_active_nodes);
 
       //The end position must be representable in stored_size_type
       this->test_size_against_n_nodes(new_map_size);
@@ -832,8 +844,8 @@ class deque_base
       if (additional_nodes > unused_slots) {
          const size_type new_active_nodes = size_type(old_active_nodes + additional_nodes);
          //Doubling size, but at least the needed nodes plus spares (matches generic)
-         const size_type new_map_size =
-            dtl::max_value(size_type(old_map_size*2u), size_type(new_active_nodes + 2u));
+         const size_type new_map_size = this->prot_clamp_map_size
+            (dtl::max_value(size_type(old_map_size*2u), size_type(new_active_nodes + 2u)), new_active_nodes);
 
          //The end position must be representable in stored_size_type
          this->test_size_against_n_nodes(new_map_size);
@@ -870,7 +882,7 @@ class deque_base
       ptr_alloc_ptr new_nstart;
 
       //Check for 1.5 factor
-      if (old_map_size/3u >= new_active_nodes/2u) {
+      if (old_map_size/3u >= new_active_nodes/2u || (new_active_nodes <= old_map_size && this->prot_map_is_max())) {
          new_nstart = old_map + priv_new_offset(is_single_ended_t(), add_at_front, old_map_size, new_active_nodes, additional_nodes + unused_slots);
          const ptr_alloc_ptr end_node = start_node + difference_type(old_active_nodes);
          if (new_nstart < start_node)
@@ -880,8 +892,8 @@ class deque_base
       }
       else {
          //1.5 increase, but at least one spare slot on each used end
-         const size_type new_map_size =
-            dtl::max_value(size_type(old_map_size + old_map_size/2u), size_type(new_active_nodes + 1u + size_type(is_single_ended)));
+         const size_type new_map_size = this->prot_clamp_map_size
+            (dtl::max_value(size_type(old_map_size + old_map_size/2u), size_type(new_active_nodes + 1u + size_type(is_single_ended))), new_active_nodes);
 
          //The end position must be representable in stored_size_type
          this->test_size_against_n_nodes(new_map_size);
@@ -942,7 +954,8 @@ class deque_base
 
          ptr_alloc_ptr new_nstart;
 
-         if (old_map_size/2u >= new_active_nodes) {
+         //Recenter if the map is big enough or the map is already at max size
+         if (old_map_size/2u >= new_active_nodes || (new_active_nodes <= old_map_size && this->prot_map_is_max())) {
             new_nstart = old_map + priv_new_offset(is_single_ended_t(), add_at_front, old_map_size, new_active_nodes, additional_nodes);
             if (new_nstart < start_node)
                boost::container::move_n(start_node, old_active_nodes, new_nstart);
@@ -951,7 +964,8 @@ class deque_base
          }
          else {
             //Doubling size, but at least one spare slot on each end
-            const size_type new_map_size = dtl::max_value(size_type(old_map_size*2), size_type(new_active_nodes + 1u + size_type(is_single_ended)));
+            const size_type new_map_size = this->prot_clamp_map_size
+               (dtl::max_value(size_type(old_map_size*2), size_type(new_active_nodes + 1u + size_type(is_single_ended))), new_active_nodes);
 
             //The end position must be representable in stored_size_type
             this->test_size_against_n_nodes(new_map_size);
@@ -1665,7 +1679,13 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
    BOOST_CONTAINER_NODISCARD inline
       size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
-      { return this->prot_max_size(); }
+   {
+      //The map has at most prot_max_map_size() nodes and the end position (one
+      //after the last element) must be representable: map nodes * block size - 1
+      BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
+      const size_type max_map = this->prot_max_map_size();
+      return max_map ? size_type(size_type(max_map - 1u)*block_size + size_type(block_size - 1u)) : 0u;
+   }
 
    void resize(size_type new_size)
    {

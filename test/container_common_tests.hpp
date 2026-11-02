@@ -12,6 +12,8 @@
 #define BOOST_CONTAINER_TEST_CONTAINER_COMMON_TESTS_HPP
 
 #include <boost/container/detail/config_begin.hpp>
+#include <boost/container/throw_exception.hpp>
+#include "lightweight_test.hpp"
 
 namespace boost{
 namespace container {
@@ -77,6 +79,86 @@ bool test_nth_index_of(Container &c)
    if(csz != c.size())
       return false;
    return true;
+}
+
+//With a small stored_size the container grows to max_size() and max_size()
+//elements can be stored. Insertions in the middle can stop up to "slack"
+//elements before max_size() (deque: the free positions of the first block
+//can not be moved)
+template<class Container>
+void test_stored_size_reach_back(typename Container::size_type slack)
+{
+   #ifndef BOOST_NO_EXCEPTIONS
+   typedef typename Container::size_type size_type;
+   typedef typename Container::value_type value_type;
+   {
+      Container c;
+      const size_type max = c.max_size();
+      while(c.size() != max)
+         c.push_back(value_type(c.size()));
+      BOOST_TEST_THROWS(c.push_back(value_type(0)), boost::container::length_error_t);
+      BOOST_TEST(c.size() == max);
+      BOOST_TEST(c.front() == value_type(0) && c.back() == value_type(max - 1u));
+   }
+   {
+      Container c;
+      c.resize(c.max_size());
+      BOOST_TEST(c.size() == c.max_size());
+   }
+   {
+      Container c;
+      const size_type max = c.max_size();
+      //Only the last insertions are in the middle (they are O(n))
+      while(c.size() + 1000u < max)
+         c.push_back(value_type(0));
+      bool thrown = false;
+      while(!thrown && c.size() != max){
+         try{  c.insert(c.begin() + typename Container::difference_type(c.size()/2u), value_type(c.size()));  }
+         catch(const boost::container::length_error_t &){  thrown = true;  }
+      }
+      BOOST_TEST(c.size() + slack >= max);
+   }
+   #else
+   (void)slack;
+   #endif   //BOOST_NO_EXCEPTIONS
+}
+
+//push_front and a fifo pattern (two push_back, one pop_front) can stop up to
+//"slack" elements before max_size()
+template<class Container>
+void test_stored_size_reach_front(typename Container::size_type slack)
+{
+   #ifndef BOOST_NO_EXCEPTIONS
+   typedef typename Container::size_type size_type;
+   typedef typename Container::value_type value_type;
+   const size_type min_size = size_type(Container().max_size() - slack);
+   {
+      Container c;
+      bool thrown = false;
+      while(!thrown && c.size() != c.max_size()){
+         try{  c.push_front(value_type(c.size()));  }
+         catch(const boost::container::length_error_t &){  thrown = true;  }
+      }
+      BOOST_TEST(c.size() >= min_size);
+   }
+   {
+      Container c;
+      bool thrown = false;
+      while(!thrown && c.size() != c.max_size()){
+         try{
+            c.push_back(value_type(1));
+            if(c.size() != c.max_size()){
+               c.push_back(value_type(2));
+               c.pop_front();
+            }
+         }
+         catch(const boost::container::length_error_t &){  thrown = true;  }
+      }
+      BOOST_TEST(c.size() >= min_size);
+   }
+   #else
+   (void)slack;
+   #endif   //BOOST_NO_EXCEPTIONS
 }
 
 }  //namespace test{

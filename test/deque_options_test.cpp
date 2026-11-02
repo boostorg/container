@@ -11,6 +11,7 @@
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/allocator.hpp>
 #include "lightweight_test.hpp"
+#include "container_common_tests.hpp"
 
 using namespace boost::container;
 
@@ -52,6 +53,22 @@ void test_stored_size_type()
       typedef deque<unsigned char, allocator<unsigned char>, options_t> deque_t;
       BOOST_CONTAINER_STATIC_ASSERT(sizeof(deque_t) < sizeof(default_deque_t));
       test_stored_size_type_impl<Unsigned, deque_t>();
+   }
+   //Test growth up to max_size()
+   {
+      typedef deque<int, void, typename deque_options< stored_size<Unsigned> >::type> deque_t;
+      test::test_stored_size_reach_back<deque_t>(deque_t::get_block_size());
+      test::test_stored_size_reach_front<deque_t>(deque_t::get_block_size());
+   }
+   {
+      typedef deque<int, void, typename deque_options< stored_size<Unsigned>, reservable<true> >::type> deque_t;
+      test::test_stored_size_reach_back<deque_t>(deque_t::get_block_size());
+      test::test_stored_size_reach_front<deque_t>(deque_t::get_block_size());
+   }
+   {
+      typedef deque<int, void, typename deque_options< stored_size<Unsigned>, block_size<10u> >::type> deque_t;
+      test::test_stored_size_reach_back<deque_t>(deque_t::get_block_size());
+      test::test_stored_size_reach_front<deque_t>(deque_t::get_block_size());
    }
 }
 

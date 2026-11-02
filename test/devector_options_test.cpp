@@ -11,6 +11,7 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/next_capacity.hpp>
 #include "lightweight_test.hpp"
+#include "container_common_tests.hpp"
 #include <stdexcept>
 
 using namespace boost::container;
@@ -107,7 +108,12 @@ void test_stored_size_type()
       BOOST_CONTAINER_STATIC_ASSERT( sizeof(Unsigned) >= sizeof(std::size_t) ||
                            sizeof(devector_t) < sizeof(devector<unsigned char>) );
    }
-   
+   //Test growth up to max_size()
+   {
+      typedef devector<unsigned char, void, options_t> devector_t;
+      test::test_stored_size_reach_back<devector_t>(0u);
+      test::test_stored_size_reach_front<devector_t>(0u);
+   }
 }
 
 void test_growth_factor_50()

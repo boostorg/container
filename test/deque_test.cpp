@@ -450,7 +450,9 @@ bool test_huge_size_length_error()
    #ifndef BOOST_NO_EXCEPTIONS
    typedef typename boost::container::deque_options<boost::container::reservable<Reservable> >::type options_t;
    boost::container::deque<char, void, options_t> d(10u, 'a');
-   const std::size_t sizes[] = { std::size_t(-1), std::size_t(-1) - 1u, std::size_t(-1) / 2u };
+   //Sizes above max_size(): a smaller size can throw bad_alloc instead
+   const std::size_t max = d.max_size();
+   const std::size_t sizes[] = { std::size_t(-1), std::size_t(-1) - 1u, max == std::size_t(-1) ? max : std::size_t(max + 1u) };
    for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i){
       bool length_error_thrown = false;
       try{

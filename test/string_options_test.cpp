@@ -11,6 +11,7 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/next_capacity.hpp>
 #include "lightweight_test.hpp"
+#include "container_common_tests.hpp"
 #include <climits>
 
 using namespace boost::container;
@@ -80,6 +81,11 @@ void test_stored_size_type()
       const std::size_t theoretical_sso_cap = theoretical_long_repr_t - 2u;   //-2 --> 1 for short header, 1 for null terminator
       string_t s;
       BOOST_TEST(s.capacity() == theoretical_sso_cap);
+   }
+   //Test growth up to max_size()
+   {
+      typedef basic_string<char, std::char_traits<char>, void, options_t> string_t;
+      test::test_stored_size_reach_back<string_t>(0u);
    }
 }
 

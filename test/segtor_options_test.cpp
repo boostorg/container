@@ -12,6 +12,7 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/options.hpp>
 #include "lightweight_test.hpp"
+#include "container_common_tests.hpp"
 
 using namespace boost::container;
 
@@ -49,6 +50,19 @@ void test_stored_size_type()
       typedef segtor<unsigned char, allocator<unsigned char>, options_t> segtor_t;
       BOOST_CONTAINER_STATIC_ASSERT(sizeof(segtor_t) < sizeof(default_segtor_t));
       test_stored_size_type_impl<Unsigned, segtor_t>();
+   }
+   //Test growth up to max_size()
+   {
+      typedef segtor<int, void, typename segtor_options< stored_size<Unsigned> >::type> segtor_t;
+      test::test_stored_size_reach_back<segtor_t>(0u);
+   }
+   {
+      typedef segtor<int, void, typename segtor_options< stored_size<Unsigned>, reservable<true> >::type> segtor_t;
+      test::test_stored_size_reach_back<segtor_t>(0u);
+   }
+   {
+      typedef segtor<int, void, typename segtor_options< stored_size<Unsigned>, block_size<10u> >::type> segtor_t;
+      test::test_stored_size_reach_back<segtor_t>(0u);
    }
 }
 
