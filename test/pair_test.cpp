@@ -61,6 +61,26 @@ void test_heterogeneous_assignment()
    }
 }
 
+//A pair with a reference member assigns through the reference
+void test_reference_member_assignment()
+{
+   #if defined(BOOST_CONTAINER_HAS_CONDITIONALLY_TRIVIAL_SPECIAL_MEMBERS)
+   int c = 3, d = 4, e = 5;
+   dtl::pair<int&, int> p1(c, 10), p2(d, 20), p3(e, 30);
+   p1 = p2;
+   BOOST_TEST(c == 4 && d == 4 && p1.second == 20 && &p1.first == &c);
+   p1 = boost::move(p3);
+   BOOST_TEST(c == 5 && e == 5 && p1.second == 30 && &p1.first == &c);
+
+   dtl::pair<int, int&> q1(10, c), q2(20, d);
+   q1 = q2;
+   BOOST_TEST(c == 4 && q1.first == 20 && &q1.second == &c);
+
+   //Without reference members the assignments stay trivial
+   BOOST_CONTAINER_STATIC_ASSERT((boost::move_detail::is_trivially_copyable< dtl::pair<int, int> >::value));
+   #endif
+}
+
 int main ()
 {
    {
@@ -179,5 +199,6 @@ int main ()
    }
    #endif   //#!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_HDR_TUPLE)
    test_heterogeneous_assignment();
+   test_reference_member_assignment();
    return ::boost::report_errors();
 }

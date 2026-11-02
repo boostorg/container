@@ -361,7 +361,21 @@ struct pair
    #endif
 
    //Defaulted: keeps pair trivially copyable (passed in registers)
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+   #if defined(BOOST_CONTAINER_HAS_CONDITIONALLY_TRIVIAL_SPECIAL_MEMBERS)
+   //With a reference member the defaulted assignments are deleted, so
+   //user-provided ones assign through the references
+   static constexpr bool has_reference_member =
+      ::boost::move_detail::is_reference<T1>::value || ::boost::move_detail::is_reference<T2>::value;
+
+   pair& operator=(const pair& p) requires(!has_reference_member) = default;
+
+   pair& operator=(const pair& p) requires(has_reference_member)
+   {
+      first  = p.first;
+      second = p.second;
+      return *this;
+   }
+   #elif !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    pair& operator=(const pair& p) = default;
    #else
    pair& operator=(BOOST_COPY_ASSIGN_REF(pair) p)
@@ -372,7 +386,16 @@ struct pair
    }
    #endif
 
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+   #if defined(BOOST_CONTAINER_HAS_CONDITIONALLY_TRIVIAL_SPECIAL_MEMBERS)
+   pair& operator=(pair&& p) requires(!has_reference_member) = default;
+
+   pair& operator=(pair&& p) requires(has_reference_member)
+   {
+      first  = ::boost::forward<T1>(p.first);
+      second = ::boost::forward<T2>(p.second);
+      return *this;
+   }
+   #elif !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
    pair& operator=(pair&& p) = default;
    #else
    pair& operator=(BOOST_RV_REF(pair) p)

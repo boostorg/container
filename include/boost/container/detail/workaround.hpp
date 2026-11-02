@@ -145,6 +145,12 @@
    #define BOOST_CONTAINER_NO_CXX17_CTAD
 #endif
 
+//Special member functions selected by a requires clause, where a defaulted
+//one stays trivial (this __cpp_concepts value reports it)
+#if defined(__cpp_concepts) && (__cpp_concepts >= 202002L)
+   #define BOOST_CONTAINER_HAS_CONDITIONALLY_TRIVIAL_SPECIAL_MEMBERS
+#endif
+
 #if defined(BOOST_CONTAINER_DISABLE_ATTRIBUTE_NODISCARD)
    #define BOOST_CONTAINER_NODISCARD
 #else
