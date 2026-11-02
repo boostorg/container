@@ -1410,33 +1410,9 @@ int map_single_pass_ordered_insert(const int (&sorted)[N], OrderedTag tag, dtl::
    return 0;
 }
 
-//In C++03, flat_map(ordered_unique_range, It, It, alloc) and
-//flat_multimap(ordered_range, It, It, [comp,] alloc) do not compile when the
-//sequence is a static_vector: the allocator is not converted to the allocator
-//of the internal tree. These constructors are not tested for these maps.
-template<class C>
-struct map_single_pass_ordered_alloc_ctor_compiles
-{  static const bool value = true;  };
-
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-template<class K, class T, class Cmp, class V, std::size_t N, class O>
-struct map_single_pass_ordered_alloc_ctor_compiles< flat_map<K, T, Cmp, static_vector<V, N, O> > >
-{  static const bool value = false;  };
-
-template<class K, class T, class Cmp, class V, std::size_t N, class O>
-struct map_single_pass_ordered_alloc_ctor_compiles< flat_multimap<K, T, Cmp, static_vector<V, N, O> > >
-{  static const bool value = false;  };
-#endif
-
-template<class MyBoostMap, class MyStdMap, class OrderedTag, std::size_t N>
-int map_single_pass_ordered_alloc_ctor(const int (&)[N], OrderedTag, dtl::false_type /*compiles*/)
-{
-   return 0;
-}
-
 //Map(ordered_[unique_]range, It, It, alloc), Map(ordered_[unique_]range, It, It, comp, alloc)
 template<class MyBoostMap, class MyStdMap, class OrderedTag, std::size_t N>
-int map_single_pass_ordered_alloc_ctor(const int (&sorted)[N], OrderedTag tag, dtl::true_type /*compiles*/)
+int map_single_pass_ordered_alloc_ctor(const int (&sorted)[N], OrderedTag tag)
 {
    typedef typename MyBoostMap::key_type        IntType;
    typedef dtl::pair<IntType, IntType>          IntPairType;
@@ -1502,8 +1478,7 @@ int map_single_pass_test_cont(const int (&values)[N], const int (&sorted)[N], Or
       if(!r.read_once()) return 1;
       if(!CheckEqualPairContainers(*pboostmap, stdmap_sorted)) return 1;
    }
-   if(map_single_pass_ordered_alloc_ctor<MyBoostMap, MyStdMap>
-         (sorted, tag, dtl::bool_<map_single_pass_ordered_alloc_ctor_compiles<MyBoostMap>::value>()))
+   if(map_single_pass_ordered_alloc_ctor<MyBoostMap, MyStdMap>(sorted, tag))
       return 1;
    //insert(It, It) in an empty map and in a map with elements
    for(int n = 0; n != 2; ++n){

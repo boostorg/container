@@ -409,7 +409,7 @@ class flat_map
    template <class InputIterator>
    inline
       flat_map(ordered_unique_range_t, InputIterator first, InputIterator last, const allocator_type& a)
-      : m_flat_tree(ordered_unique_range, first, last, Compare(), a)
+      : m_flat_tree(ordered_unique_range, first, last, Compare(), BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -2306,7 +2306,7 @@ class flat_multimap
    template <class InputIterator>
    inline
    flat_multimap(ordered_range_t, InputIterator first, InputIterator last, const Compare& comp, const allocator_type& a)
-      : m_flat_tree(ordered_range, first, last, comp, a)
+      : m_flat_tree(ordered_range, first, last, comp, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_multimap using the specified comparison object and
@@ -2321,7 +2321,7 @@ class flat_multimap
    template <class InputIterator>
    inline
       flat_multimap(ordered_range_t, InputIterator first, InputIterator last, const allocator_type &a)
-      : m_flat_tree(ordered_range, first, last, Compare(), a)
+      : m_flat_tree(ordered_range, first, last, Compare(), BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
