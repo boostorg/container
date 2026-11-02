@@ -8,10 +8,11 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_CONTAINER_TEST_VOID_ALLOCATOR_TEST_HEADER
-#define BOOST_CONTAINER_TEST_VOID_ALLOCATOR_TEST_HEADER
+#ifndef BOOST_CONTAINER_TEST_ALLOCATOR_TEST_HEADER
+#define BOOST_CONTAINER_TEST_ALLOCATOR_TEST_HEADER
 
 #include <boost/container/allocator_traits.hpp>
+#include <boost/container/scoped_allocator.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/workaround.hpp>
 
@@ -87,8 +88,32 @@ inline bool test_void_allocator_conversions()
    return true;
 }
 
+//Allocators of different value types compare as the rebound allocator: a == b
+//gives the same result as a == Alloc(b), also in reverse order, and also for
+//scoped_allocator_adaptors of the same allocators.
+template<class Alloc, class OtherAlloc>
+inline bool test_rebound_comparison()
+{
+   const Alloc a = Alloc();
+   const OtherAlloc b = OtherAlloc();
+   const bool expected = (a == Alloc(b));
+
+   if ((a == b) != expected || (b == a) != expected)
+      return false;
+   if ((a != b) == expected || (b != a) == expected)
+      return false;
+
+   typedef scoped_allocator_adaptor<Alloc>      scoped_t;
+   typedef scoped_allocator_adaptor<OtherAlloc> other_scoped_t;
+   const scoped_t sa(a);
+   const other_scoped_t sb(b);
+   if ((sa == sb) != expected || (sa != sb) == expected)
+      return false;
+   return true;
+}
+
 }  //namespace test {
 }  //namespace container {
 }  //namespace boost {
 
-#endif   //BOOST_CONTAINER_TEST_VOID_ALLOCATOR_TEST_HEADER
+#endif   //BOOST_CONTAINER_TEST_ALLOCATOR_TEST_HEADER

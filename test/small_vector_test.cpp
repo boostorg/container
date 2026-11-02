@@ -12,7 +12,7 @@
 #include "vector_test.hpp"
 #include "movable_int.hpp"
 #include "propagate_allocator_test.hpp"
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include "unqualified_swap_test.hpp"

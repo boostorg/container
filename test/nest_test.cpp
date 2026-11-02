@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/experimental/nest.hpp>
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include <boost/container/new_allocator.hpp>
 #include "lightweight_test.hpp"
 #include "shared_input_iterator.hpp"

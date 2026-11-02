@@ -16,6 +16,7 @@
 #include "list_test.hpp"
 #include "vector_test.hpp"
 #include "extended_allocator_test.hpp"
+#include "allocator_test.hpp"
 
 using namespace boost::container;
 
@@ -120,6 +121,10 @@ int main ()
 
    if(!test_allocate_throws_bad_alloc< node_allocator<int> >() ||
       !test_allocate_throws_bad_alloc< node_allocator<int, 64, 2> >())
+      return 1;
+
+   if(!test::test_rebound_comparison< node_allocator<int>, node_allocator<long> >() ||
+      !test::test_rebound_comparison< node_allocator<int, 64, 1>, node_allocator<long, 64, 1> >())
       return 1;
 
    return 0;

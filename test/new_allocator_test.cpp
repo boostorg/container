@@ -13,7 +13,7 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/move/utility_core.hpp>
 #include "movable_int.hpp"
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include "lightweight_test.hpp"
 #include <cstddef>
 #include <new>
@@ -137,5 +137,7 @@ int main()
    test_noexcept();
    #endif
    BOOST_TEST(test::test_void_allocator_conversions< new_allocator<void> >());
+   BOOST_TEST((test::test_rebound_comparison< new_allocator<int>, new_allocator<long> >()));
+   BOOST_TEST((test::test_rebound_comparison< new_allocator<int>, new_allocator<void> >()));
    return boost::report_errors();
 }

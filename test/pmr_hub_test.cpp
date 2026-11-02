@@ -16,7 +16,7 @@ int main() { return 0; }
 
 #include <boost/container/pmr/hub.hpp>
 #include <boost/container/detail/type_traits.hpp>
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 
 int main()
 {

@@ -342,6 +342,16 @@ class allocator
    }
 };
 
+template<class T1, class T2, unsigned Version, unsigned int AllocationDisableMask>
+BOOST_CONTAINER_NODISCARD
+inline bool operator==(const allocator<T1, Version, AllocationDisableMask> &, const allocator<T2, Version, AllocationDisableMask> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return true;   }
+
+template<class T1, class T2, unsigned Version, unsigned int AllocationDisableMask>
+BOOST_CONTAINER_NODISCARD
+inline bool operator!=(const allocator<T1, Version, AllocationDisableMask> &, const allocator<T2, Version, AllocationDisableMask> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return false;   }
+
 }  //namespace container {
 }  //namespace boost {
 

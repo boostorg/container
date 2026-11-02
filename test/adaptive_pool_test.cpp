@@ -13,7 +13,7 @@
 #include <boost/container/adaptive_pool.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include "movable_int.hpp"
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include "list_test.hpp"
 #include "vector_test.hpp"
 #include "extended_allocator_test.hpp"
@@ -248,6 +248,11 @@ int main ()
       !test_allocate_throws_bad_alloc< adaptive_pool<int, 256, 2, 1, 2> >() ||
       !test_allocate_throws_bad_alloc< private_adaptive_pool<int> >() ||
       !test_allocate_throws_bad_alloc< private_adaptive_pool<int, 256, 2, 1, 2> >())
+      return 1;
+
+   if(!test::test_rebound_comparison< adaptive_pool<int>, adaptive_pool<long> >() ||
+      !test::test_rebound_comparison< adaptive_pool<int>, adaptive_pool<void> >() ||
+      !test::test_rebound_comparison< adaptive_pool<int, 256, 2, 1, 1>, adaptive_pool<long, 256, 2, 1, 1> >())
       return 1;
 
    return 0;

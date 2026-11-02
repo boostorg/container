@@ -10,6 +10,7 @@
 #include <boost/container/pmr/polymorphic_allocator.hpp>
 #include <boost/container/pmr/global_resource.hpp>
 #include "lightweight_test.hpp"
+#include "allocator_test.hpp"
 
 #include "derived_from_memory_resource.hpp"
 #include "propagation_test_allocator.hpp"
@@ -215,5 +216,7 @@ int main()
    test_destroy();
    test_select_on_container_copy_construction();
    test_resource();
+   BOOST_TEST((test::test_rebound_comparison< polymorphic_allocator<int>, polymorphic_allocator<long> >()));
+   BOOST_TEST((test::test_rebound_comparison< polymorphic_allocator<int>, polymorphic_allocator<void> >()));
    return ::boost::report_errors();
 }

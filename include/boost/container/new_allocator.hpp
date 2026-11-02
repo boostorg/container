@@ -189,6 +189,16 @@ class new_allocator
    {  return false;   }
 };
 
+template<class T1, class T2>
+BOOST_CONTAINER_NODISCARD
+inline bool operator==(const new_allocator<T1> &, const new_allocator<T2> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return true;   }
+
+template<class T1, class T2>
+BOOST_CONTAINER_NODISCARD
+inline bool operator!=(const new_allocator<T1> &, const new_allocator<T2> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return false;   }
+
 }  //namespace container {
 }  //namespace boost {
 

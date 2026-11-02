@@ -317,6 +317,16 @@ class node_allocator
    }
 };
 
+template<class T1, class T2, std::size_t NodesPerBlock, std::size_t Version>
+BOOST_CONTAINER_NODISCARD
+inline bool operator==(const node_allocator<T1, NodesPerBlock, Version> &, const node_allocator<T2, NodesPerBlock, Version> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return true;   }
+
+template<class T1, class T2, std::size_t NodesPerBlock, std::size_t Version>
+BOOST_CONTAINER_NODISCARD
+inline bool operator!=(const node_allocator<T1, NodesPerBlock, Version> &, const node_allocator<T2, NodesPerBlock, Version> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return false;   }
+
 }  //namespace container {
 }  //namespace boost {
 

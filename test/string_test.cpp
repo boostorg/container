@@ -14,7 +14,7 @@
 
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include <boost/container/new_allocator.hpp>
 #include <string>
 #include <vector>

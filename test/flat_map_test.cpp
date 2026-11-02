@@ -18,7 +18,7 @@
 #include "movable_int.hpp"
 #include "flat_map_test.hpp"
 #include "propagate_allocator_test.hpp"
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include "container_common_tests.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"

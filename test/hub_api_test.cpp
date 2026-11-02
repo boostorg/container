@@ -17,7 +17,7 @@ int main() { return 0; }
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
 #include <boost/container/hub.hpp>
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/pmr/hub.hpp>
 #include <boost/container/throw_exception.hpp>

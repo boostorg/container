@@ -25,7 +25,7 @@
 #include <boost/type_traits/is_nothrow_move_constructible.hpp>
 #include "dummy_test_allocator.hpp"
 #include "propagate_allocator_test.hpp"
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include "check_equal_containers.hpp"
 #include "movable_int.hpp"
 

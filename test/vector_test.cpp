@@ -28,7 +28,7 @@
 #include "expand_bwd_test_allocator.hpp"
 #include "expand_bwd_test_template.hpp"
 #include "propagate_allocator_test.hpp"
-#include "void_allocator_test.hpp"
+#include "allocator_test.hpp"
 #include "vector_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"

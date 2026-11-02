@@ -668,6 +668,16 @@ class adaptive_pool<void, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version
    {  return false;   }
 };
 
+template<class T1, class T2, std::size_t NodesPerBlock, std::size_t MaxFreeBlocks, std::size_t OverheadPercent, unsigned Version>
+BOOST_CONTAINER_NODISCARD
+inline bool operator==(const adaptive_pool<T1, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &, const adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return true;   }
+
+template<class T1, class T2, std::size_t NodesPerBlock, std::size_t MaxFreeBlocks, std::size_t OverheadPercent, unsigned Version>
+BOOST_CONTAINER_NODISCARD
+inline bool operator!=(const adaptive_pool<T1, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &, const adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &) BOOST_NOEXCEPT_OR_NOTHROW
+{  return false;   }
+
 //private_adaptive_pool<void>: a type-erased allocator.
 //It does not allocate
 template<std::size_t NodesPerBlock, std::size_t MaxFreeBlocks, std::size_t OverheadPercent, unsigned Version>
