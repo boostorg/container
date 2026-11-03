@@ -399,8 +399,8 @@ int main ()
    if(!test_previous())
       return 1;
 
-   if(!test_insert_after_return< new_allocator<int> >()      ||
-      !test_insert_after_return< node_allocator<int> >()     ||
+   if(!test_insert_after_return< new_allocator<int> >()  ||
+      !test_insert_after_return< node_allocator<int> >() )
       return 1;
 
    return 0;
