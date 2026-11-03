@@ -8,14 +8,22 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+//test_allocate_failure_throws asks for sizes that can not be allocated, and GCC
+//warns when it sees that size in the inlined call to operator new
+#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ >= 7)
+#pragma GCC diagnostic ignored "-Walloc-size-larger-than="
+#endif
+
 #include "lightweight_test.hpp"
 #include <boost/container/pmr/global_resource.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/vector.hpp>
 #include <boost/container/detail/operator_new_helpers.hpp>
+#include <boost/container/detail/workaround.hpp>   //BOOST_CONTAINER_ASAN, BOOST_CONTAINER_TSAN
 
 #include <cstddef>
 #include <cstring>
+#include <new>
 
 using namespace boost::container;
 
@@ -246,6 +254,30 @@ void test_with_pmr_vector()
    BOOST_TEST(vec.get_allocator().resource() == mr);
 }
 
+// Test: an allocation that can not be served throws bad_alloc, also when it is
+// over-aligned and there is no aligned operator new (it does not return null).
+// AddressSanitizer and ThreadSanitizer abort when a throwing operator new fails.
+void test_allocate_failure_throws()
+{
+   #if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_CONTAINER_ASAN) && !defined(BOOST_CONTAINER_TSAN)
+   boost::container::pmr::memory_resource* mr = boost::container::pmr::new_delete_resource();
+   //Bigger than any address space (half of it can be available to a 32 bit process in 64-bit kernels),
+   //and rounding it up to the alignment does not overflow
+   const std::size_t huge = std::size_t(-1) - 4096u;
+   for (std::size_t align = 1u; align <= (max_align*16u); align *= 2u) {
+      bool bad_alloc_thrown = false;
+      try{
+         void *const p = mr->allocate(huge, align);
+         mr->deallocate(p, huge, align);
+      }
+      catch(const std::bad_alloc &){
+         bad_alloc_thrown = true;
+      }
+      BOOST_TEST(bad_alloc_thrown);
+   }
+   #endif
+}
+
 int main()
 {
    test_returns_non_null();
@@ -262,6 +294,7 @@ int main()
    test_interleaved_alloc_dealloc();
    test_large_allocation();
    test_with_pmr_vector();
+   test_allocate_failure_throws();
 
    return boost::report_errors();
 }

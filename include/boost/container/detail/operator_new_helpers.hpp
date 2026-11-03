@@ -24,6 +24,9 @@
 
 #if !defined(__cpp_aligned_new)
 #include <boost/container/detail/aligned_allocation.hpp>
+#  if !defined(BOOST_NO_EXCEPTIONS)
+#  include <new>   //std::bad_alloc
+#  endif
 #endif
 
 namespace boost {
@@ -64,9 +67,14 @@ BOOST_CONTAINER_FORCEINLINE void* operator_new_raw_allocate(const std::size_t si
       #else
       //C++ requires zero-sized allocations to return a non-null pointer
       void *const p = aligned_allocate(alignment, !size ? 1 : size);
-      //As ::operator new, throw instead of returning null
-      if(BOOST_UNLIKELY(!p))
+      //As ::operator new, throw std::bad_alloc instead of returning null
+      if(BOOST_UNLIKELY(!p)){
+         #if defined(BOOST_NO_EXCEPTIONS)
          throw_bad_alloc();
+         #else
+         throw std::bad_alloc();
+         #endif
+      }
       return p;
       #endif
    }
