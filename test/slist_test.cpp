@@ -211,6 +211,34 @@ bool test_previous()
    return true;
 }
 
+//insert_after of n elements or a range returns the last inserted element,
+//or the position if nothing is inserted (version 2 allocators use another path)
+template<class Allocator>
+bool test_insert_after_return()
+{
+   typedef boost::container::slist<int, Allocator> cont;
+   typedef typename cont::iterator iterator;
+   cont s;
+   s.push_front(0);
+   const int v[] = { 1, 2, 3 };
+   iterator it = s.insert_after(s.begin(), v, v + 3);
+   if(*it != 3 || ++it != s.end())
+      return false;
+   if(s.insert_after(s.begin(), v, v) != s.begin())
+      return false;
+   it = s.insert_after(s.begin(), 2u, 7);
+   if(*it != 7 || *++it != 1)
+      return false;
+   if(s.insert_after(s.begin(), 0u, 7) != s.begin() || s.size() != 6u)
+      return false;
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   it = s.insert_after(s.begin(), { 8, 9 });
+   if(*it != 9 || *++it != 7)
+      return false;
+   #endif
+   return true;
+}
+
 int main ()
 {
    if(!test_unqualified_swap())
@@ -369,6 +397,10 @@ int main ()
    }
 
    if(!test_previous())
+      return 1;
+
+   if(!test_insert_after_return< new_allocator<int> >()      ||
+      !test_insert_after_return< node_allocator<int> >()     ||
       return 1;
 
    return 0;
