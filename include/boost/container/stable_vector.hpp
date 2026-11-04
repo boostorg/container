@@ -2410,14 +2410,14 @@ class stable_vector
 //! value type of `InputIterator` and using the default allocator.
 template <typename InputIterator>
 stable_vector(InputIterator, InputIterator) ->
-   stable_vector<typename iterator_traits<InputIterator>::value_type>;
+   stable_vector<typename iter_value<InputIterator>::type>;
 
 //! <b>Deduction guide</b>: allows a `stable_vector` to be constructed from the
 //! iterator range <code>[first, last)</code>, deducing the element type from the
 //! value type of `InputIterator` and taking the allocator type from the supplied allocator.
 template <typename InputIterator, typename Allocator>
 stable_vector(InputIterator, InputIterator, Allocator const&) ->
-   stable_vector<typename iterator_traits<InputIterator>::value_type, Allocator>;
+   stable_vector<typename iter_value<InputIterator>::type, Allocator>;
 
 #endif
 

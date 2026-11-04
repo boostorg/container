@@ -334,6 +334,11 @@ bool test_ctad()  //Older clang versions suffer from ICE here
       deque<int>  test = deque<int>(gold.begin(), gold.end(), new_allocator<int>());
       if (!test::CheckEqualContainers(gold, test)) return false;
    }
+   {
+      deque test(5, 3);
+      deque test2(5, 3, new_allocator<int>());
+      if (test.size() != 5u || test2.size() != 5u || test[4] != 3 || test2[4] != 3) return false;
+   }
    return true;
 }
 #else
