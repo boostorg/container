@@ -38,6 +38,7 @@
 // container/detail
 #include <boost/container/detail/addressof.hpp>
 #include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+#include <boost/container/detail/compare_functors.hpp>
 #include <boost/container/detail/alloc_helpers.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/detail/construct_in_place.hpp>
@@ -565,7 +566,7 @@ class stable_vector
 
    typedef ::boost::container::dtl::integral_constant
       <unsigned, boost::container::dtl::
-      version<ValueAllocator>::value>                              alloc_version;
+      version<ValueAllocator>::value>                 alloc_version;
    typedef typename allocator_traits_type::
       template portable_rebind_alloc
          <node_type>::type                            node_allocator_type;
@@ -1830,6 +1831,66 @@ class stable_vector
       return iterator(last.node_pointer());
    }
 
+   //! <b>Effects</b>: Removes all the elements that compare equal to value.
+   //!
+   //! <b>Throws</b>: If comparison throws. The elements that are not compared yet are kept.
+   //!
+   //! <b>Complexity</b>: Linear time. It performs exactly size() comparisons for equality.
+   //!
+   //! <b>Returns</b>: The number of removed elements.
+   //!
+   //! <b>Note</b>: The elements that are not removed are not moved: their relative order
+   //!   is unchanged and references and iterators to them remain valid.
+   size_type remove(const T& value)
+   {  return this->remove_if(equal_to_value<T>(value));  }
+
+   //! <b>Effects</b>: Removes all the elements for which a specified
+   //!   predicate is satisfied.
+   //!
+   //! <b>Throws</b>: If pred throws. The elements that are not tested yet are kept.
+   //!
+   //! <b>Complexity</b>: Linear time. It performs exactly size() calls to the predicate.
+   //!
+   //! <b>Returns</b>: The number of removed elements.
+   //!
+   //! <b>Note</b>: The elements that are not removed are not moved: their relative order
+   //!   is unchanged and references and iterators to them remain valid.
+   template <class Pred>
+   size_type remove_if(Pred pred)
+   {
+      BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT;
+      if(this->empty())
+         return 0u;
+      const index_iterator ie = this->index.end() - difference_type(ExtraPointers);
+      index_iterator in = this->index.begin();
+      //The elements before the first removed one stay in their position
+      while(in != ie && !pred(node_ptr_traits::static_cast_from(*in)->get_data()))
+         ++in;
+      if(in == ie)
+         return 0u;
+
+      //Only the index pointers of the kept elements are moved
+      const size_type old_size = this->size();
+      {
+         const index_iterator first_erased(in);
+         index_iterator out(in);
+         multiallocation_chain erased;
+         erase_if_guard guard(*this, first_erased, out, in, erased);
+         do{
+            node_type &n = *node_ptr_traits::static_cast_from(*in);
+            this->priv_destroy_node(n);
+            erased.push_back(node_ptr_traits::pointer_to(n));
+            ++in;
+            while(in != ie && !pred(node_ptr_traits::static_cast_from(*in)->get_data())){
+               *out = *in;
+               ++out;
+               ++in;
+            }
+         } while(in != ie);
+      }
+      return size_type(old_size - this->size());
+   }
+
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.
@@ -1909,6 +1970,38 @@ class stable_vector
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+
+   //Moves the index pointers that are not tested yet after the kept ones, puts the
+   //erased nodes in the pool and erases the tail of the index. It also runs if
+   //the predicate throws: the elements that are not tested yet are kept.
+   class erase_if_guard
+   {
+      public:
+      erase_if_guard( stable_vector &sv, const index_iterator &first_erased
+                    , index_iterator &out, index_iterator &in, multiallocation_chain &erased)
+         : m_sv(sv), m_first_erased(first_erased), m_iwrite(out), m_iread(in), m_erased(erased)
+      {}
+
+      ~erase_if_guard()
+      {
+         const index_iterator ie = m_sv.index.end() - difference_type(ExtraPointers);
+         while(m_iread != ie){
+            *m_iwrite = *m_iread;
+            ++m_iwrite;
+            ++m_iread;
+         }
+         m_sv.priv_put_in_pool(m_erased);
+         m_sv.index.erase(m_iwrite, ie);
+         index_traits_type::fix_up_pointers_from(m_sv.index, m_first_erased);
+      }
+
+      private:
+      stable_vector &m_sv;
+      const index_iterator &m_first_erased;
+      index_iterator &m_iwrite;
+      index_iterator &m_iread;
+      multiallocation_chain &m_erased;
+   };
 
    void priv_move_assign(BOOST_RV_REF(stable_vector) x, dtl::bool_<true> /*steal_resources*/)
    {
@@ -2333,26 +2426,20 @@ stable_vector(InputIterator, InputIterator, Allocator const&) ->
 #undef BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT
 
 //! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
+//!   The other elements are not moved: references and iterators to them stay valid.
 //!
 //! <b>Complexity</b>: Linear.
 template <class T, class A, class U>
 inline typename stable_vector<T, A>::size_type erase(stable_vector<T, A>& c, const U& v)
-{
-   typename stable_vector<T, A>::size_type old_size = c.size();
-   c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
-   return old_size - c.size();
-}
+{  return c.remove_if(equal_to_value<U>(v));  }
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!   The other elements are not moved: references and iterators to them stay valid.
 //!
 //! <b>Complexity</b>: Linear.
 template <class T, class A, class Pred>
 inline typename stable_vector<T, A>::size_type erase_if(stable_vector<T, A>& c, Pred pred)
-{
-   typename stable_vector<T, A>::size_type old_size = c.size();
-   c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
-   return old_size - c.size();
-}
+{  return c.remove_if(pred);  }
 
 }  //namespace container {
 

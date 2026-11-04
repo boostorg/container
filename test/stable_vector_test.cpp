@@ -122,6 +122,160 @@ bool test_unqualified_swap()
    return true;
 }
 
+//Predicate for erase_if: true for even values. It throws if it is called with throw_at
+struct is_even_or_throw
+{
+   int throw_at;
+
+   explicit is_even_or_throw(int t = -1)
+      : throw_at(t)
+   {}
+
+   bool operator()(int v) const
+   {
+      #ifndef BOOST_NO_EXCEPTIONS
+      if(v == throw_at)
+         throw throw_at;
+      #endif
+      return (v & 1) == 0;
+   }
+};
+
+//The free erase and erase_if do not move the kept elements: references
+//and iterators to them keep their value
+bool test_erase_if_keeps_references()
+{
+   typedef boost::container::stable_vector<int> cont;
+   typedef cont::size_type size_type;
+   const int n = 100;
+   {
+      cont c;
+      for(int i = 0; i != n; ++i)
+         c.push_back(i);
+      const int *refs[n];
+      cont::iterator its[n];
+      for(int i = 0; i != n; ++i){
+         refs[i] = &c[size_type(i)];
+         its[i] = c.begin() + i;
+      }
+      if(boost::container::erase_if(c, is_even_or_throw()) != size_type(n/2) || c.size() != size_type(n/2))
+         return false;
+      for(int i = 1; i < n; i += 2){
+         if(*refs[i] != i || *its[i] != i || &c[size_type(i/2)] != refs[i])
+            return false;
+      }
+      //The nodes of the erased elements are reused
+      for(int i = 0; i != n; ++i)
+         c.push_back(i);
+      if(c.size() != size_type(n/2 + n) || *refs[1] != 1 || c.back() != n - 1)
+         return false;
+   }
+   {  //erase by value, including the first and the last elements
+      cont c;
+      for(int i = 0; i != 10; ++i)
+         c.push_back(i % 3);
+      const int *p = &c[1];
+      if(boost::container::erase(c, 0) != 4u || c.size() != 6u || *p != 1 || &c[0] != p)
+         return false;
+      for(size_type i = 0; i != c.size(); ++i){
+         if(c[i] != int(i % 2u) + 1)
+            return false;
+      }
+      if(boost::container::erase(c, 5) != 0u || c.size() != 6u)
+         return false;
+      if(boost::container::erase(c, 1) != 3u || boost::container::erase(c, 2) != 3u || !c.empty())
+         return false;
+      if(boost::container::erase(c, 1) != 0u)
+         return false;
+      c.push_back(7);
+      if(c.size() != 1u || c[0] != 7)
+         return false;
+   }
+   #ifndef BOOST_NO_EXCEPTIONS
+   {  //If the predicate throws, the elements that are not tested yet are kept
+      cont c;
+      for(int i = 0; i != n; ++i)
+         c.push_back(i);
+      const int *p = &c[51];
+      bool thrown = false;
+      try{
+         boost::container::erase_if(c, is_even_or_throw(50));
+      }
+      catch(int){
+         thrown = true;
+      }
+      //0, 2, ..., 48 are erased
+      if(!thrown || c.size() != size_type(n - 25))
+         return false;
+      for(size_type i = 0; i != c.size(); ++i){
+         if(c[i] != (i < 25u ? int(2u*i + 1u) : int(i + 25u)))
+            return false;
+      }
+      if(*p != 51 || &c[26] != p)
+         return false;
+   }
+   #endif   //BOOST_NO_EXCEPTIONS
+   return true;
+}
+
+//The members remove and remove_if do not move the kept elements and
+//return the number of removed elements
+bool test_remove_members()
+{
+   typedef boost::container::stable_vector<int> cont;
+   typedef cont::size_type size_type;
+   const int n = 100;
+   {
+      cont c;
+      for(int i = 0; i != n; ++i)
+         c.push_back(i);
+      const int *refs[n];
+      for(int i = 0; i != n; ++i)
+         refs[i] = &c[size_type(i)];
+      if(c.remove_if(is_even_or_throw()) != size_type(n/2) || c.size() != size_type(n/2))
+         return false;
+      for(int i = 1; i < n; i += 2){
+         if(*refs[i] != i || &c[size_type(i/2)] != refs[i])
+            return false;
+      }
+      if(c.remove_if(is_even_or_throw()) != 0u || c.size() != size_type(n/2))
+         return false;
+      if(c.remove(1) != 1u || c.remove(n - 1) != 1u || c.remove(n) != 0u)
+         return false;
+      if(c.size() != size_type(n/2 - 2) || c.front() != 3 || c.back() != n - 3 || &c[0] != refs[3])
+         return false;
+   }
+   {  //Empty container and all the elements removed
+      cont c;
+      if(c.remove(0) != 0u || c.remove_if(is_even_or_throw()) != 0u || !c.empty())
+         return false;
+      c.push_back(2);
+      c.push_back(2);
+      if(c.remove(2) != 2u || !c.empty())
+         return false;
+      c.push_back(3);
+      if(c.size() != 1u || c[0] != 3)
+         return false;
+   }
+   #ifndef BOOST_NO_EXCEPTIONS
+   {  //If the predicate throws, the elements that are not tested yet are kept
+      cont c;
+      for(int i = 0; i != n; ++i)
+         c.push_back(i);
+      bool thrown = false;
+      try{
+         c.remove_if(is_even_or_throw(50));
+      }
+      catch(int){
+         thrown = true;
+      }
+      if(!thrown || c.size() != size_type(n - 25) || c[25] != 50)
+         return false;
+   }
+   #endif   //BOOST_NO_EXCEPTIONS
+   return true;
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -265,6 +419,12 @@ int main()
           boost::has_trivial_destructor_after_move<pointer>::value)
         , "has_trivial_destructor_after_move(std::allocator) test failed");
    }
+
+   if(!test_erase_if_keeps_references())
+      return 1;
+
+   if(!test_remove_members())
+      return 1;
 
    return 0;
 }
