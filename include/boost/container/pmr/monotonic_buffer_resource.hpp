@@ -327,7 +327,8 @@ inline void* monotonic_buffer_resource::do_allocate(std::size_t bytes, std::size
       //The block obtained from the upstream resource is only guaranteed to be
       //max_align-aligned, so for an over-aligned request reserve enough extra
       //space to be able to realign the returned block inside the new buffer.
-      const std::size_t extra_for_alignment = (alignment > memory_resource::max_align) ? (alignment - 1u) : 0u;
+      const std::size_t extra_for_alignment = (alignment > memory_resource::max_align)
+         ? (alignment - memory_resource::max_align) : 0u;
       if(BOOST_UNLIKELY(bytes > std::size_t(-1) - extra_for_alignment))
          throw_bad_alloc();
       //The new buffer holds at least bytes plus the realignment slack. Change the internal

@@ -93,9 +93,8 @@ inline void* aligned_allocate(std::size_t al, std::size_t sz)
 
 inline void* aligned_allocate(std::size_t al, std::size_t sz)
 {
-   
-   //Make room for a back pointer metadata
-   const std::size_t extra = std::size_t(sizeof(void*) + al);
+   //Make room for a back pointer metadata. malloc returns at least sizeof(void*) alignment
+   const std::size_t extra = al > sizeof(void*) ? al : sizeof(void*);
    if (BOOST_UNLIKELY(sz > std::size_t(std::size_t(-1) - extra)))
       return 0;
    void* const mptr = malloc(sz + extra);

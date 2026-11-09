@@ -197,7 +197,8 @@ class resource_adaptor_imp
 
       if (0 != p) {
          //Obtain the aligned address after the bookeeping data
-         void *const aligned_ptr = (void*)(((std::size_t)p + priv_extra_bytes_for_overalignment(alignment)) & ~(alignment - 1));
+         void *const aligned_ptr = (void*)(((std::size_t)p +
+            sizeof(void*) + (alignment - 1u)) & ~(alignment - 1u));
 
          //Store bookeeping data. Use memcpy as the underlying memory might be unaligned for
          //a pointer (e.g. 2 byte alignment in 32 bit, 4 byte alignment in 64 bit)
@@ -221,9 +222,13 @@ class resource_adaptor_imp
       return reinterpret_cast<void*>(reinterpret_cast<std::size_t>(aligned_ptr) - sizeof(void*));
    }
 
+   //Only called when alignment > priv_guaranteed_allocator_alignment(). The allocator returns
+   //addresses that are a multiple of that guaranteed alignment (G), so the bookkeeping pointer
+   //uses at most sizeof(void*) rounded up to G and the realignment padding at most "alignment - G".
    BOOST_CONTAINER_FORCEINLINE static std::size_t priv_extra_bytes_for_overalignment(std::size_t alignment)
    {
-      return alignment - 1 + sizeof(void*);
+      const std::size_t g = priv_guaranteed_allocator_alignment();
+      return ((sizeof(void*) + (g - 1u)) & ~(g - 1u)) + (alignment - g);
    }
 
    BOOST_CONTAINER_FORCEINLINE static std::size_t priv_guaranteed_allocator_alignment()
