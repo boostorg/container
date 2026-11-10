@@ -57,62 +57,7 @@ struct slist_node_traits
    {  n->next = next;  }
 };
 
-struct block_slist_header
-   : public slist_node
-{
-   std::size_t size;
-};
-
 typedef bi::linear_slist_algorithms<slist_node_traits> slist_algo;
-
-template<class DerivedFromBlockSlistHeader = block_slist_header>
-class block_slist_base
-{
-   slist_node m_slist;
-
-   BOOST_STATIC_CONSTEXPR std::size_t MaxAlignMinus1 = memory_resource::max_align-1u;
-
-   public:
-
-   BOOST_STATIC_CONSTEXPR std::size_t header_size = std::size_t(sizeof(DerivedFromBlockSlistHeader) + MaxAlignMinus1) & std::size_t(~MaxAlignMinus1);
-
-   explicit block_slist_base()
-   {  slist_algo::init_header(&m_slist);  }
-
-   #if !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   block_slist_base(const block_slist_base&) = delete;
-   block_slist_base operator=(const block_slist_base&) = delete;
-   #else
-   private:
-   block_slist_base          (const block_slist_base&);
-   block_slist_base operator=(const block_slist_base&);
-   public:
-   #endif
-
-   void *allocate(std::size_t size, memory_resource &mr)
-   {
-      if(BOOST_UNLIKELY((size_t(-1) - header_size) < size))
-         throw_bad_alloc();
-      void *p = mr.allocate(size+header_size);
-      block_slist_header &mb  = *::new((void*)p, boost_container_new_t()) DerivedFromBlockSlistHeader;
-      mb.size = size+header_size;
-      slist_algo::link_after(&m_slist, &mb);
-      return (char *)p + header_size;
-   }
-
-   void release(memory_resource &mr) BOOST_NOEXCEPT
-   {
-      slist_node *n = slist_algo::node_traits::get_next(&m_slist);
-      while(n){
-         DerivedFromBlockSlistHeader &d = static_cast<DerivedFromBlockSlistHeader&>(*n);
-         n = slist_algo::node_traits::get_next(n);
-         std::size_t size = d.block_slist_header::size;
-         d.~DerivedFromBlockSlistHeader();
-         mr.deallocate(reinterpret_cast<char*>(&d), size, memory_resource::max_align);         
-      }
-      slist_algo::init_header(&m_slist);
-   }
-};
 
 //Metadata for block_slist, placed at the end of the block
 struct block_slist_footer
@@ -132,11 +77,13 @@ struct block_slist_footer
 //  |  alignment requested from upstream)         | (next, size|lg2 align)|
 //  +---------------------------------------------+-----------------------+
 //  ^ upstream address                            ^ upstream address + size - footer_size
+//
+//  block_slist does not store the upstream resource: the owner passes the same resource to
+//  allocate() and release().
 
 class block_slist
 {
    slist_node        m_slist;
-   memory_resource & m_upstream_rsrc;
 
    //Bytes of each block used by the footer
    BOOST_STATIC_CONSTEXPR std::size_t footer_size = sizeof(block_slist_footer);
@@ -190,8 +137,8 @@ class block_slist
 
    public:
 
-   explicit block_slist(memory_resource &upstream_rsrc)
-      : m_slist(), m_upstream_rsrc(upstream_rsrc)
+   block_slist()
+      : m_slist()
    {  slist_algo::init_header(&m_slist);  }
 
    #if !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -204,15 +151,16 @@ class block_slist
    public:
    #endif
 
+   //The owner must call release() before the destruction
    ~block_slist()
-   {  this->release();  }
+   {  BOOST_ASSERT(slist_algo::unique(&m_slist));  }
 
-   //Allocates from upstream a block whose usable bytes are not less than "min_payload", with
+   //Allocates from "upstream" a block whose usable bytes are not less than "min_payload", with
    //alignment max(alignment, max_align), and returns the start of its usable bytes. On return,
    //"payload" is the number of usable bytes (it can be bigger than "min_payload"). Throws
    //bad_alloc if the size of the block (more than "min_payload") would be bigger than
    //PTRDIFF_MAX. If the upstream resource throws, there are no effects.
-   void *allocate(std::size_t min_payload, std::size_t alignment, std::size_t &payload)
+   void *allocate(std::size_t min_payload, std::size_t alignment, memory_resource &upstream, std::size_t &payload)
    {
       BOOST_ASSERT((alignment & (alignment - 1u)) == 0u);
       if(alignment < memory_resource::max_align)
@@ -222,7 +170,7 @@ class block_slist
       if(BOOST_UNLIKELY(!bsize))
          throw_bad_alloc();
 
-      char *const p = static_cast<char*>(m_upstream_rsrc.allocate(bsize, alignment));
+      char *const p = static_cast<char*>(upstream.allocate(bsize, alignment));
 
       payload = priv_payload_size(bsize);
       block_slist_footer &f = *::new((void*)(p + payload), boost_container_new_t()) block_slist_footer;
@@ -231,7 +179,8 @@ class block_slist
       return p;
    }
 
-   void release() BOOST_NOEXCEPT
+   //Deallocates all the blocks to "upstream", the resource used to allocate them
+   void release(memory_resource &upstream) BOOST_NOEXCEPT
    {
       slist_node *n = slist_algo::node_traits::get_next(&m_slist);
       while(n){
@@ -241,13 +190,10 @@ class block_slist
          const std::size_t alignment = priv_decode_alignment(f.size_and_alignment_log2);
          char *const p = reinterpret_cast<char*>(&f) + footer_size - size;
          f.~block_slist_footer();
-         m_upstream_rsrc.deallocate(p, size, alignment);
+         upstream.deallocate(p, size, alignment);
       }
       slist_algo::init_header(&m_slist);
    }
-
-   memory_resource& upstream_resource() const BOOST_NOEXCEPT
-   {  return m_upstream_rsrc;   }
 };
 
 }  //namespace pmr {

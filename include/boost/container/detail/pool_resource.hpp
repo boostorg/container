@@ -63,15 +63,15 @@ BOOST_CONTAINER_CONSTANT_VAR std::size_t pool_options_default_largest_required_p
 //        the first allocation. Pool i has blocks of priv_pool_block(i) bytes:
 //        pool_options_minimum_largest_required_pool_block << i.
 //
-//        pool_data_t: derives from block_slist_base<> (block_slist.hpp, singly linked list)
+//        pool_data_t: derives from block_slist (block_slist.hpp, singly linked list)
 //        |
-//        +-- chunk list (the block_slist_base<> part): one upstream allocation per chunk
+//        +-- chunk list (the block_slist part): one upstream allocation per chunk
 //        |
-//        |     +-------------------+---------+---------+-----+---------+
-//        |     | block_slist_header| block 0 | block 1 | ... | block n |
-//        |     +-------------------+---------+---------+-----+---------+
-//        |     <--- header_size --> <-- n+1 = blocks_per_chunk blocks of -->
-//        |                              priv_pool_block(i) bytes each
+//        |     +---------+---------+-----+---------+--------+-------------------+
+//        |     | block 0 | block 1 | ... | block n | unused | block_slist_footer|
+//        |     +---------+---------+-----+---------+--------+-------------------+
+//        |     <-- n+1 = blocks_per_chunk blocks of -->
+//        |         priv_pool_block(i) bytes each
 //        |
 //        +-- free_slist: the free blocks of all the chunks of the pool. A free block
 //              holds only an slist_node (the link); a block in use has no header.
@@ -233,13 +233,11 @@ class pool_resource
 //pool_data_t
 
 class pool_data_t
-   : public block_slist_base<>
+   : public block_slist
 {
-   typedef block_slist_base<> block_slist_base_t;
-
    public:
    explicit pool_data_t(std::size_t initial_blocks_per_chunk)
-      : block_slist_base_t(), next_blocks_per_chunk(initial_blocks_per_chunk)
+      : block_slist(), next_blocks_per_chunk(initial_blocks_per_chunk)
    {  slist_algo::init_header(&free_slist);  }
 
    void *allocate_block() BOOST_NOEXCEPT
@@ -262,7 +260,7 @@ class pool_data_t
    void release(memory_resource &upstream)
    {
       slist_algo::init_header(&free_slist);
-      this->block_slist_base_t::release(upstream);
+      this->block_slist::release(upstream);
       next_blocks_per_chunk = pool_options_minimum_max_blocks_per_chunk;
    }
 
@@ -275,7 +273,9 @@ class pool_data_t
 
       //Minimum block size is at least max_align, so all pools allocate sizes that are multiple of max_align,
       //meaning that all blocks are max_align-aligned.
-      char *p = static_cast<char *>(block_slist_base_t::allocate(blocks_per_chunk*pool_block, mr));
+      std::size_t usable_size;
+      char *p = static_cast<char *>
+         (block_slist::allocate(blocks_per_chunk*pool_block, memory_resource::max_align, mr, usable_size));
 
       //Create header types. This is no-throw
       for(std::size_t i = 0, max = blocks_per_chunk; i != max; ++i){

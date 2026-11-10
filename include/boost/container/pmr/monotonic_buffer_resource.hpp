@@ -70,10 +70,13 @@ typedef std::size_t        uintptr_type;
 class monotonic_buffer_resource
    : public memory_resource
 {
-   block_slist       m_memory_blocks;
+   //Fields used by every allocation first, next to the vptr
    void *            m_current_buffer;
    std::size_t       m_current_buffer_size;
+   //Fields used when a new buffer is needed and by release()
    std::size_t       m_next_buffer_size;
+   memory_resource & m_upstream;
+   block_slist       m_memory_blocks;
    void * const      m_initial_buffer;
    //The size of m_initial_buffer or, if there is no initial buffer, the
    //next_buffer_size set by the constructor. Used by release().
@@ -228,28 +231,31 @@ inline std::size_t monotonic_buffer_resource::priv_next_buffer_size_after_buffer
 }
 
 inline monotonic_buffer_resource::monotonic_buffer_resource(memory_resource* upstream) BOOST_NOEXCEPT
-   : m_memory_blocks(upstream ? *upstream : *get_default_resource())
-   , m_current_buffer(0)
+   : m_current_buffer(0)
    , m_current_buffer_size(0u)
    , m_next_buffer_size(initial_next_buffer_size)
+   , m_upstream(upstream ? *upstream : *get_default_resource())
+   , m_memory_blocks()
    , m_initial_buffer(0)
    , m_initial_buffer_size(initial_next_buffer_size)
 {}
 
 inline monotonic_buffer_resource::monotonic_buffer_resource(std::size_t initial_size, memory_resource* upstream) BOOST_NOEXCEPT
-   : m_memory_blocks(upstream ? *upstream : *get_default_resource())
-   , m_current_buffer(0)
+   : m_current_buffer(0)
    , m_current_buffer_size(0u)
    , m_next_buffer_size(initial_size)
+   , m_upstream(upstream ? *upstream : *get_default_resource())
+   , m_memory_blocks()
    , m_initial_buffer(0)
    , m_initial_buffer_size(m_next_buffer_size)
 {}
 
 inline monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, std::size_t buffer_size, memory_resource* upstream) BOOST_NOEXCEPT
-   : m_memory_blocks(upstream ? *upstream : *get_default_resource())
-   , m_current_buffer(buffer)
+   : m_current_buffer(buffer)
    , m_current_buffer_size(buffer_size)
    , m_next_buffer_size(priv_next_buffer_size_after_buffer(buffer_size))
+   , m_upstream(upstream ? *upstream : *get_default_resource())
+   , m_memory_blocks()
    , m_initial_buffer(buffer)
    , m_initial_buffer_size(buffer ? buffer_size : m_next_buffer_size)
 {}
@@ -259,7 +265,7 @@ inline monotonic_buffer_resource::~monotonic_buffer_resource()
 
 inline void monotonic_buffer_resource::release() BOOST_NOEXCEPT
 {
-   m_memory_blocks.release();
+   m_memory_blocks.release(m_upstream);
    m_current_buffer = m_initial_buffer;
    if(m_initial_buffer){
       m_current_buffer_size = m_initial_buffer_size;
@@ -272,7 +278,7 @@ inline void monotonic_buffer_resource::release() BOOST_NOEXCEPT
 }
 
 inline memory_resource* monotonic_buffer_resource::upstream_resource() const BOOST_NOEXCEPT
-{  return &m_memory_blocks.upstream_resource();   }
+{  return &m_upstream;   }
 
 inline std::size_t monotonic_buffer_resource::remaining_storage(std::size_t alignment, std::size_t &wasted_due_to_alignment) const BOOST_NOEXCEPT
 {
@@ -321,7 +327,7 @@ inline void* monotonic_buffer_resource::do_allocate(std::size_t bytes, std::size
       //of the buffer, without padding.
       std::size_t usable_size;
       m_current_buffer = m_memory_blocks.allocate
-         (boost::container::dtl::max_value(bytes, m_next_buffer_size), alignment, usable_size);
+         (boost::container::dtl::max_value(bytes, m_next_buffer_size), alignment, m_upstream, usable_size);
       m_current_buffer_size = usable_size;
       //The next buffer is bigger than this one (by the growth factor)
       m_next_buffer_size = priv_grow_buffer_size(usable_size);
