@@ -14,6 +14,7 @@
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/throw_exception.hpp>
+#include <boost/container/detail/aligned_allocation.hpp>
 #include <cstdlib>
 
 class memory_resource_logger
@@ -40,7 +41,8 @@ class memory_resource_logger
 
    virtual void* do_allocate(std::size_t bytes, std::size_t alignment) BOOST_OVERRIDE
    {
-      char *addr =(char*)std::malloc(bytes);
+      //Honor the requested alignment, so that the users can rely on it
+      char *addr =(char*)boost::container::dtl::aligned_allocate(alignment, bytes ? bytes : 1u);
       if(!addr){
          boost::container::throw_bad_alloc();
       }
@@ -64,7 +66,7 @@ class memory_resource_logger
       else{
          const allocation_info &info = m_info[i];
          m_mismatches += info.bytes != bytes || info.alignment != alignment;
-         std::free(p);
+         boost::container::dtl::aligned_deallocate(p);
          m_info.erase(m_info.nth(i));
       }
    }
@@ -77,7 +79,7 @@ class memory_resource_logger
    void reset()
    {
       while(!m_info.empty()){
-         std::free(m_info.back().address);
+         boost::container::dtl::aligned_deallocate(m_info.back().address);
          m_info.pop_back();
       }
       m_mismatches = 0u;
