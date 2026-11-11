@@ -498,6 +498,36 @@ void test_default_init_unconstrained_construct()
    }
 }
 
+struct pointee_class {};
+
+//destroy must compile and be noexcept when the value type is a pointer (a pseudo-destructor call),
+//as in the index of stable_vector, a vector of node pointers.
+void test_destroy_pointer_value_type()
+{
+   typedef pointee_class* ptr_t;
+   typedef boost::container::allocator_traits< SimpleAllocator<ptr_t> >          no_member_traits;
+   typedef boost::container::allocator_traits< NothrowDestroyAllocator<ptr_t> >  nothrow_member_traits;
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(no_member_traits::destroy(declval<SimpleAllocator<ptr_t>&>(), declval<ptr_t*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_member_traits::destroy(declval<NothrowDestroyAllocator<ptr_t>&>(), declval<ptr_t*>())) ));
+   #endif
+   pointee_class obj;
+   ptr_t p = &obj;
+   SimpleAllocator<ptr_t> a;
+   no_member_traits::destroy(a, &p);
+   NothrowDestroyAllocator<ptr_t> na;
+   nothrow_member_traits::destroy(na, &p);
+   BOOST_TEST(na.destroy_called_);
+   {
+      boost::container::vector<ptr_t> v(3u, p);
+      v.erase(v.begin());
+      v.pop_back();
+      BOOST_TEST_EQ(v.size(), 1u);
+      BOOST_TEST(v[0] == p);
+   }
+}
+
 int main()
 {
    using namespace boost::container::dtl;
@@ -741,6 +771,7 @@ int main()
    test_destroy_throwing_destructor();
    test_inherited_members();
    test_default_init_unconstrained_construct();
+   test_destroy_pointer_value_type();
 
    return ::boost::report_errors();
 }

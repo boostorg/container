@@ -696,16 +696,18 @@ struct allocator_traits
 
    template<class T>
    inline static void priv_destroy(dtl::true_type, Allocator &a, T* p)
-      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(a.destroy(p)))
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_allocator_destroy<Allocator, T>::value))
    {  a.destroy(p);  }
 
    #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
    #pragma GCC diagnostic pop
    #endif
 
+   //The noexcept condition is computed in a class template: MSVC 14.2 rejects "p->~T()" in the
+   //noexcept specification of a function template when T is a pointer type (error C2301/C2325).
    template<class T>
    inline static void priv_destroy(dtl::false_type, Allocator &, T* p)
-      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(p->~T()))
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_allocator_destroy<Allocator, T>::value))
    {  p->~T(); (void)p;  }
 
    #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
