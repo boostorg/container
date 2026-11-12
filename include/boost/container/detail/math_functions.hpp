@@ -74,7 +74,9 @@ inline Integer lcm(const Integer & A, const Integer & B)
 template <typename Integer>
 struct max_power_of_2
 {
-   BOOST_CONTAINER_STATIC_ASSERT((Integer(~Integer(0)) > Integer(0)));   //unsigned
+   //is_unsigned in two steps to workaround MSVC 14.0 compilation error
+   BOOST_STATIC_CONSTEXPR bool is_unsigned = Integer(~Integer(0)) > Integer(0);
+   BOOST_CONTAINER_STATIC_ASSERT((is_unsigned));
    BOOST_STATIC_CONSTEXPR Integer value = Integer((Integer(~Integer(0)) >> 1u) + 1u);
 };
 
