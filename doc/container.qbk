@@ -2992,6 +2992,18 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
    * [@https://github.com/boostorg/container/issues/346 GitHub #346: ['"Regression: Invalid assertion in string assign (and probably other functions)"]].
    * [@https://github.com/boostorg/container/issues/351 GitHub #351: ['"vector<X>::erase()-from-middle leaks for X in {basic_string, deque, stable_vector}"]].
 
+* A systematic, AI-assisted review of the library found and fixed many bugs that users did
+  not report. The main types of bugs are:
+   * Exception safety: memory leaks and lost nodes when a comparator, a constructor or an allocation throws or
+     incorrect rollback on insertions.
+   * `noexcept` specifications: incorrect conditions in move constructors and move assignments of `vector`,
+     `small_vector`, `static_vector`, `devector`, `set` and `map`, and functions that can throw but were marked
+     `noexcept`.
+   * Allocator propagation: `small_vector` move and swap with unequal allocators, `vector` move assignment.
+   * Integer overflow and size limits.
+   * Class template argument deduction for `stable_vector`, `deque`, `list`, `slist`, `basic_string` and `nest`.
+   * Complexity: quadratic insertion in `stable_vector` and `deque`, and a non-linear `erase_if` in flat containers.
+
 [endsect]
 
 [section:release_notes_boost_1_92_00 Boost 1.92 Release]
