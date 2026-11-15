@@ -513,13 +513,17 @@ void test_destroy_pointer_value_type()
    BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_member_traits::destroy(declval<NothrowDestroyAllocator<ptr_t>&>(), declval<ptr_t*>())) ));
    #endif
    pointee_class obj;
-   ptr_t p = &obj;
+   //destroy ends the lifetime of the pointer object and its value can not be
+   //read after it (GCC warns), so use different pointer objects
+   ptr_t destroyed_p = &obj;
    SimpleAllocator<ptr_t> a;
-   no_member_traits::destroy(a, &p);
+   no_member_traits::destroy(a, &destroyed_p);
+   ptr_t nothrow_destroyed_p = &obj;
    NothrowDestroyAllocator<ptr_t> na;
-   nothrow_member_traits::destroy(na, &p);
+   nothrow_member_traits::destroy(na, &nothrow_destroyed_p);
    BOOST_TEST(na.destroy_called_);
    {
+      const ptr_t p = &obj;
       boost::container::vector<ptr_t> v(3u, p);
       v.erase(v.begin());
       v.pop_back();
