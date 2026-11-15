@@ -35,6 +35,7 @@
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/force_ptr.hpp>
 #include <boost/move/adl_move_swap.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/node_pool_impl.hpp>
 
@@ -431,6 +432,7 @@ class private_adaptive_node_pool_impl_common
    : private segment_manager_holder<SegmentManagerBase>
 {
    typedef segment_manager_holder<SegmentManagerBase>       segment_manager_holder_t;
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(private_adaptive_node_pool_impl_common)
 
    public:
    //!Segment manager typedef
@@ -971,6 +973,28 @@ class private_adaptive_node_pool_impl_common
       this->priv_invariants(real_num_node, num_subblocks, real_block_alignment);
    }
 
+   //!Move constructor: takes the blocks of other and uses the same segment
+   //!manager. other is left without blocks. Never throws
+   private_adaptive_node_pool_impl_common(BOOST_RV_REF(private_adaptive_node_pool_impl_common) other)
+   :  segment_manager_holder_t(other)
+   ,  m_block_container(boost::move(other.m_block_container))
+   ,  m_totally_free_blocks(other.m_totally_free_blocks)
+   {  other.m_totally_free_blocks = 0;  }
+
+   //!Move assignment: deallocates the blocks of *this, then takes the blocks of
+   //!other and uses the same segment manager. other is left without blocks.
+   //!All nodes allocated from *this must be deallocated before. Never throws
+   void priv_move_assign(private_adaptive_node_pool_impl_common &other, const size_type num_subblocks, const size_type real_block_alignment, const size_type real_num_node)
+   {
+      if(this != &other){
+         this->priv_clear(num_subblocks, real_block_alignment, real_num_node);
+         static_cast<segment_manager_holder_t&>(*this) = static_cast<const segment_manager_holder_t&>(other);
+         m_block_container = boost::move(other.m_block_container);
+         m_totally_free_blocks = other.m_totally_free_blocks;
+         other.m_totally_free_blocks = 0;
+      }
+   }
+
    public:
    private_adaptive_node_pool_impl_common(segment_manager_base_type *segment_mngr_base)
       //General purpose allocator
@@ -1075,10 +1099,8 @@ class private_adaptive_node_pool_impl_ct
 {
    typedef private_adaptive_node_pool_impl_common<SegmentManagerBase, Flags> base_t;
 
-   //Non-copyable
    private_adaptive_node_pool_impl_ct();
-   private_adaptive_node_pool_impl_ct(const private_adaptive_node_pool_impl_ct &);
-   private_adaptive_node_pool_impl_ct &operator=(const private_adaptive_node_pool_impl_ct &);
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(private_adaptive_node_pool_impl_ct)
 
    public:
    typedef typename base_t::void_pointer              void_pointer;
@@ -1118,6 +1140,21 @@ class private_adaptive_node_pool_impl_ct
       //General purpose allocator
    :  base_t(segment_mngr_base)
    {}
+
+   //!Move constructor: takes the blocks of other and uses the same segment
+   //!manager. other is left without blocks. Never throws
+   private_adaptive_node_pool_impl_ct(BOOST_RV_REF(private_adaptive_node_pool_impl_ct) other)
+   :  base_t(BOOST_MOVE_BASE(base_t, other))
+   {}
+
+   //!Move assignment: deallocates the blocks of *this, then takes the blocks of
+   //!other and uses the same segment manager. other is left without blocks.
+   //!All nodes allocated from *this must be deallocated before. Never throws
+   private_adaptive_node_pool_impl_ct &operator=(BOOST_RV_REF(private_adaptive_node_pool_impl_ct) other)
+   {
+      this->priv_move_assign(other, NumSubBlocks, data_t::alignment, RealNumNode);
+      return *this;
+   }
 
    //!Destructor. Deallocates all allocated blocks. Never throws
    ~private_adaptive_node_pool_impl_ct()
@@ -1254,8 +1291,7 @@ class private_adaptive_node_pool_impl_rt
 
    //Non-copyable
    private_adaptive_node_pool_impl_rt();
-   private_adaptive_node_pool_impl_rt(const private_adaptive_node_pool_impl_rt &);
-   private_adaptive_node_pool_impl_rt &operator=(const private_adaptive_node_pool_impl_rt &);
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(private_adaptive_node_pool_impl_rt)
 
    protected:
 
@@ -1326,6 +1362,28 @@ class private_adaptive_node_pool_impl_rt
          this->data_t::set_num_subblocks(num_subblocks);
          this->data_t::set_real_num_node(real_num_node);
       }
+   }
+
+   //!Move constructor: takes the blocks of other and uses the same segment
+   //!manager. other is left without blocks. Never throws
+   private_adaptive_node_pool_impl_rt(BOOST_RV_REF(private_adaptive_node_pool_impl_rt) other)
+   :  data_t(other)
+   ,  impl_t(BOOST_MOVE_BASE(impl_t, other))
+   {}
+
+   //!Move assignment: deallocates the blocks of *this, then takes the blocks of
+   //!other and uses the same segment manager. other is left without blocks.
+   //!All nodes allocated from *this must be deallocated before. Both pools
+   //!must have the same sizes. Never throws
+   private_adaptive_node_pool_impl_rt &operator=(BOOST_RV_REF(private_adaptive_node_pool_impl_rt) other)
+   {
+      BOOST_ASSERT(this->get_max_free_blocks() == other.get_max_free_blocks());
+      BOOST_ASSERT(this->get_real_node_size() == other.get_real_node_size());
+      BOOST_ASSERT(this->get_real_num_node() == other.get_real_num_node());
+      BOOST_ASSERT(this->get_num_subblocks() == other.get_num_subblocks());
+      BOOST_ASSERT(this->get_real_block_alignment() == other.get_real_block_alignment());
+      this->impl_t::priv_move_assign(other, this->get_num_subblocks(), this->get_real_block_alignment(), this->get_real_num_node());
+      return *this;
    }
 
    //!Destructor. Deallocates all allocated blocks. Never throws

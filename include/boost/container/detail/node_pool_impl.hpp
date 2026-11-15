@@ -29,6 +29,7 @@
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/force_ptr.hpp>
 #include <boost/move/adl_move_swap.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/detail/type_traits.hpp>
 
 #include <boost/intrusive/pointer_traits.hpp>
@@ -207,10 +208,8 @@ class private_node_pool_impl
       <typename SegmentManagerBase::size_type>              sizes_t;
    typedef segment_manager_holder<SegmentManagerBase>       segment_manager_holder_t;
 
-   //Non-copyable
    private_node_pool_impl();
-   private_node_pool_impl(const private_node_pool_impl &);
-   private_node_pool_impl &operator=(const private_node_pool_impl &);
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(private_node_pool_impl)
 
    //A node object will hold node_t when it's not allocated
    public:
@@ -283,6 +282,35 @@ class private_node_pool_impl
       packer.set_low_unpacked(node_size);
       packer.set_high1_unpacked(nodes_per_block);
       packer.set_high2_unpacked(0);
+   }
+
+   //!Move constructor: takes the blocks and the free nodes of other and uses
+   //!the same segment manager. other is left without blocks. Never throws
+   private_node_pool_impl(BOOST_RV_REF(private_node_pool_impl) other)
+      : sizes_t(other)
+      , segment_manager_holder_t(other)
+      , m_blocklist(boost::move(other.m_blocklist))
+      , m_freelist(boost::move(other.m_freelist))
+      , m_allocated(other.m_allocated)
+   {  other.priv_reset_allocated();  }
+
+   //!Move assignment: deallocates the blocks of *this, then takes the blocks and
+   //!the free nodes of other and uses the same segment manager. other is left
+   //!without blocks. All nodes allocated from *this must be deallocated before.
+   //!Both pools must have the same node size and nodes per block. Never throws
+   private_node_pool_impl &operator=(BOOST_RV_REF(private_node_pool_impl) other)
+   {
+      if(this != &other){
+         BOOST_ASSERT(m_real_node_size == other.m_real_node_size);
+         BOOST_ASSERT(m_nodes_per_block == other.m_nodes_per_block);
+         this->purge_blocks();
+         static_cast<segment_manager_holder_t&>(*this) = static_cast<const segment_manager_holder_t&>(other);
+         m_blocklist = boost::move(other.m_blocklist);
+         m_freelist  = boost::move(other.m_freelist);
+         m_allocated = other.m_allocated;
+         other.priv_reset_allocated();
+      }
+      return *this;
    }
 
    //!Destructor. Deallocates all allocated blocks. Never throws
@@ -444,6 +472,13 @@ class private_node_pool_impl
    }
 
    private:
+
+   //!Sets the count of allocated nodes to zero, keeping the packed alignment bits
+   void priv_reset_allocated()
+   {
+      packed_3n_bits_ref_t packer(m_real_node_size, m_nodes_per_block, m_allocated);
+      packer.set_high2_unpacked(0);
+   }
 
    struct push_in_list
    {
