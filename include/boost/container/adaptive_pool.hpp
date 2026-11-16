@@ -436,19 +436,22 @@ class private_adaptive_pool
    private_adaptive_pool(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //!Move constructor: the new allocator takes the pool of x, and x gets a new, empty pool
+   //!Move constructor: the new allocator takes the pool of x, and the pool of x is
+   //!left without blocks
    private_adaptive_pool(BOOST_RV_REF(private_adaptive_pool) x) BOOST_NOEXCEPT_OR_NOTHROW
-   {  m_pool.swap(x.m_pool);  }
+      : m_pool(boost::move(x.m_pool))
+   {}
 
    //!Copy assignment: *this keeps its pool
    private_adaptive_pool & operator=(BOOST_COPY_ASSIGN_REF(private_adaptive_pool)) BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
-   //!Move assignment: the pools are swapped. The nodes of the old pool of *this must have been
+   //!Move assignment: the pool of *this deallocates its blocks and takes the blocks of the
+   //!pool of x, which is left without blocks. The nodes of the pool of *this must have been
    //!deallocated before (containers do it before they propagate the allocator)
    private_adaptive_pool & operator=(BOOST_RV_REF(private_adaptive_pool) x) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      m_pool.swap(x.m_pool);
+      m_pool = boost::move(x.m_pool);
       return *this;
    }
 

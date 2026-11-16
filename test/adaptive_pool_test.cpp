@@ -185,6 +185,42 @@ bool test_alignment_only_pool()
    return true;
 }
 
+//private_adaptive_pool: move assignment deallocates the blocks of the pool of the target and
+//the target takes the blocks of the source. The source is left with an empty pool that can
+//allocate again.
+template<class Allocator>
+bool test_private_pool_move()
+{
+   typedef typename Allocator::multiallocation_chain chain_t;
+   const std::size_t initial_memory = dlmalloc_heap().allocated_memory();
+   {
+      Allocator a;
+      Allocator b;
+      //The nodes are deallocated, but the pools keep their blocks
+      chain_t chain;
+      a.allocate_individual(32u, chain);
+      a.deallocate_individual(chain);
+      b.allocate_individual(32u, chain);
+      b.deallocate_individual(chain);
+      const std::size_t memory_before_move = dlmalloc_heap().allocated_memory();
+      a = boost::move(b);
+      if(dlmalloc_heap().allocated_memory() >= memory_before_move)
+         return false;
+
+      //Both allocators can allocate after the move
+      typename Allocator::pointer p = a.allocate_one();
+      typename Allocator::pointer q = b.allocate_one();
+      a.deallocate_one(p);
+      b.deallocate_one(q);
+
+      //A move constructed allocator takes the pool too
+      Allocator c(boost::move(a));
+      p = c.allocate_one();
+      c.deallocate_one(p);
+   }
+   return dlmalloc_heap().allocated_memory() == initial_memory;
+}
+
 int main ()
 {
    if(!test::test_void_allocator_conversions< adaptive_pool<void> >() ||
@@ -253,6 +289,10 @@ int main ()
    if(!test::test_rebound_comparison< adaptive_pool<int>, adaptive_pool<long> >() ||
       !test::test_rebound_comparison< adaptive_pool<int>, adaptive_pool<void> >() ||
       !test::test_rebound_comparison< adaptive_pool<int, 256, 2, 1, 1>, adaptive_pool<long, 256, 2, 1, 1> >())
+      return 1;
+
+   if(!test_private_pool_move< private_adaptive_pool<int> >() ||
+      !test_private_pool_move< private_adaptive_pool<oint_t> >())
       return 1;
 
    return 0;

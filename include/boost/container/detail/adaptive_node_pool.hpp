@@ -29,6 +29,7 @@
 #include <boost/container/detail/adaptive_node_pool_impl.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/move/utility_core.hpp>
 
 #include <cstddef>
 #include <cmath>
@@ -74,9 +75,7 @@ class private_adaptive_node_pool
                | ::boost::container::adaptive_pool_flag::address_ordered
             > base_t;
 
-   //Non-copyable
-   private_adaptive_node_pool(const private_adaptive_node_pool &);
-   private_adaptive_node_pool &operator=(const private_adaptive_node_pool &);
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(private_adaptive_node_pool)
 
    public:
    BOOST_STATIC_CONSTEXPR std::size_t nodes_per_block = NodesPerBlock;
@@ -85,6 +84,21 @@ class private_adaptive_node_pool
    private_adaptive_node_pool()
       : base_t(0)
    {}
+
+   //!Move constructor: takes the blocks of other, which is left without blocks.
+   //!Never throws
+   private_adaptive_node_pool(BOOST_RV_REF(private_adaptive_node_pool) other)
+      : base_t(BOOST_MOVE_BASE(base_t, other))
+   {}
+
+   //!Move assignment: deallocates the blocks of *this and takes the blocks of other,
+   //!which is left without blocks. All nodes allocated from *this must be
+   //!deallocated before. Never throws
+   private_adaptive_node_pool &operator=(BOOST_RV_REF(private_adaptive_node_pool) other)
+   {
+      base_t::operator=(BOOST_MOVE_BASE(base_t, other));
+      return *this;
+   }
 };
 
 //!Pooled memory allocator using adaptive pool. Includes
