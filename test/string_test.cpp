@@ -31,6 +31,7 @@
 #include "default_init_test.hpp"
 #include "comparison_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "iterator_noexcept_utils.hpp"
 #include <boost/utility/string_view.hpp>
 #include "lightweight_test.hpp"
 #include "unqualified_swap_test.hpp"
@@ -2780,6 +2781,12 @@ void test_ctad_with_allocator()
    BOOST_TEST(s == "hello");
    #endif
 }
+
+//The operations of the iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
+   < boost::container::string >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main()
 {

@@ -13,6 +13,7 @@
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/vector.hpp>
 #include "lightweight_test.hpp"
+#include "iterator_noexcept_utils.hpp"
 
 #include <cstddef>
 
@@ -122,6 +123,36 @@ void test_transform_iterator()
    BOOST_TEST(e - 4 == b);
    BOOST_TEST(*(b + 3) == 6);
 }
+
+//The operations of the insertion proxy iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+struct noexcept_emplace_functor_t
+{
+   template<class Allocator>
+   void operator()(Allocator &, int *);
+   template<class DestIt>
+   void operator()(DestIt);
+};
+
+typedef boost::container::constant_iterator<int>                                       noexcept_constant_it;
+typedef boost::container::value_init_construct_iterator<int>                           noexcept_value_init_it;
+typedef boost::container::default_init_construct_iterator<int>                         noexcept_default_init_it;
+typedef boost::container::emplace_iterator<int, noexcept_emplace_functor_t>            noexcept_emplace_it;
+
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::counting_ops_are_nothrow<noexcept_constant_it>::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::forward_ops_are_nothrow<noexcept_constant_it, const int&>::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_ops_are_nothrow<noexcept_constant_it, const int&, std::ptrdiff_t>::value));
+BOOST_CONTAINER_STATIC_ASSERT((noexcept(noexcept_constant_it(boost::move_detail::declval<const int&>(), std::size_t()))));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::counting_ops_are_nothrow<noexcept_value_init_it>::value));
+BOOST_CONTAINER_STATIC_ASSERT((noexcept(noexcept_value_init_it(std::size_t()))));
+BOOST_CONTAINER_STATIC_ASSERT((noexcept(*boost::move_detail::declval<const noexcept_value_init_it&>())));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::counting_ops_are_nothrow<noexcept_default_init_it>::value));
+BOOST_CONTAINER_STATIC_ASSERT((noexcept(noexcept_default_init_it(std::size_t()))));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::counting_ops_are_nothrow<noexcept_emplace_it>::value));
+BOOST_CONTAINER_STATIC_ASSERT((noexcept(noexcept_emplace_it(boost::move_detail::declval<noexcept_emplace_functor_t&>()))));
+
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main()
 {

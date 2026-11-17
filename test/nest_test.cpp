@@ -13,6 +13,7 @@
 #include <boost/container/new_allocator.hpp>
 #include "lightweight_test.hpp"
 #include "shared_input_iterator.hpp"
+#include "iterator_noexcept_utils.hpp"
 #include <algorithm>
 #include <functional>
 #include <vector>
@@ -883,6 +884,12 @@ void test_prefetch_at_header()
    h.clear();
    BOOST_TEST(h.empty());
 }
+
+//The operations of the iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
+   < boost::container::nest<int> >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main()
 {

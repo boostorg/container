@@ -34,6 +34,7 @@
 #include "vector_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "iterator_noexcept_utils.hpp"
 
 #include "lightweight_test.hpp"
 #include "unqualified_swap_test.hpp"
@@ -459,6 +460,12 @@ bool test_reserve_capacity()
    s.reserve(62u);
    return s.back_capacity() >= 62u && s.size() == 1u && s.front() == 1;
 }
+
+//The operations of the iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
+   < boost::container::segtor<int> >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main ()
 {

@@ -23,6 +23,7 @@
 #include "allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "iterator_noexcept_utils.hpp"
 #include "unqualified_swap_test.hpp"
 
 using namespace boost::container;
@@ -457,6 +458,14 @@ bool test_range_of_convertible_pairs()
    }
    return true;
 }
+
+//The operations of the iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
+   < boost::container::map<int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
+   < boost::container::multimap<int, int> >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main ()
 {

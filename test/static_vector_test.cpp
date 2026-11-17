@@ -12,6 +12,7 @@
 #include <boost/container/list.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include "../../intrusive/test/iterator_test.hpp"
+#include "iterator_noexcept_utils.hpp"
 #include <boost/container/detail/config_begin.hpp>
 
 #include "static_vector_test.hpp"
@@ -867,6 +868,12 @@ void test_count_value_constructor()
    BOOST_TEST_EQ(s.size(), 5u);
    BOOST_TEST_EQ(s[4], 3);
 }
+
+//The operations of the iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
+   < boost::container::static_vector<int, 4> >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main(int, char* [])
 {
