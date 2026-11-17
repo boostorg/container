@@ -48,125 +48,125 @@ class constant_iterator
    typedef  constant_iterator<T> this_type;
 
    public:
-   inline explicit constant_iterator(const T &ref, std::size_t range_size)
+   inline explicit constant_iterator(const T &ref, std::size_t range_size) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_ptr(&ref), m_num(range_size){}
 
    //Constructors
-   inline constant_iterator()
+   inline constant_iterator() BOOST_NOEXCEPT_OR_NOTHROW
       :  m_ptr(0), m_num(0){}
 
-   inline constant_iterator& operator++()
+   inline constant_iterator& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    { increment();   return *this;   }
 
-   inline constant_iterator operator++(int)
+   inline constant_iterator operator++(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       constant_iterator result (*this);
       increment();
       return result;
    }
 
-   inline constant_iterator& operator--()
+   inline constant_iterator& operator--() BOOST_NOEXCEPT_OR_NOTHROW
    { decrement();   return *this;   }
 
-   inline constant_iterator operator--(int)
+   inline constant_iterator operator--(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       constant_iterator result (*this);
       decrement();
       return result;
    }
 
-   inline friend bool operator== (const constant_iterator& i, const constant_iterator& i2)
+   inline friend bool operator== (const constant_iterator& i, const constant_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.equal(i2); }
 
-   inline friend bool operator!= (const constant_iterator& i, const constant_iterator& i2)
+   inline friend bool operator!= (const constant_iterator& i, const constant_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i == i2); }
 
-   inline friend bool operator< (const constant_iterator& i, const constant_iterator& i2)
+   inline friend bool operator< (const constant_iterator& i, const constant_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.less(i2); }
 
-   inline friend bool operator> (const constant_iterator& i, const constant_iterator& i2)
+   inline friend bool operator> (const constant_iterator& i, const constant_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2 < i; }
 
-   inline friend bool operator<= (const constant_iterator& i, const constant_iterator& i2)
+   inline friend bool operator<= (const constant_iterator& i, const constant_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i > i2); }
 
-   inline friend bool operator>= (const constant_iterator& i, const constant_iterator& i2)
+   inline friend bool operator>= (const constant_iterator& i, const constant_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i < i2); }
 
-   inline friend std::ptrdiff_t operator- (const constant_iterator& i, const constant_iterator& i2)
+   inline friend std::ptrdiff_t operator- (const constant_iterator& i, const constant_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2.distance_to(i); }
 
    //Arithmetic signed
-   inline constant_iterator& operator+=(std::ptrdiff_t off)
+   inline constant_iterator& operator+=(std::ptrdiff_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(off); return *this;   }
 
-   inline constant_iterator operator+(std::ptrdiff_t off) const
+   inline constant_iterator operator+(std::ptrdiff_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       constant_iterator other(*this);
       other.advance(off);
       return other;
    }
 
-   inline friend constant_iterator operator+(std::ptrdiff_t off, const constant_iterator& right)
+   inline friend constant_iterator operator+(std::ptrdiff_t off, const constant_iterator& right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return right + off; }
 
-   inline constant_iterator& operator-=(std::ptrdiff_t off)
+   inline constant_iterator& operator-=(std::ptrdiff_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(-off); return *this;   }
 
-   inline constant_iterator operator-(std::ptrdiff_t off) const
+   inline constant_iterator operator-(std::ptrdiff_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this + (-off);  }
 
-   inline const T& operator[] (std::ptrdiff_t ) const
+   inline const T& operator[] (std::ptrdiff_t ) const BOOST_NOEXCEPT_OR_NOTHROW
    { return dereference(); }
 
-   inline const T& operator*() const
+   inline const T& operator*() const BOOST_NOEXCEPT_OR_NOTHROW
    { return dereference(); }
 
-   inline const T* operator->() const
+   inline const T* operator->() const BOOST_NOEXCEPT_OR_NOTHROW
    { return &(dereference()); }
 
    //Arithmetic unsigned
-   inline constant_iterator& operator+=(std::size_t off)
+   inline constant_iterator& operator+=(std::size_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this += std::ptrdiff_t(off);  }
 
-   inline constant_iterator operator+(std::size_t off) const
+   inline constant_iterator operator+(std::size_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this + std::ptrdiff_t(off);  }
 
-   inline friend constant_iterator operator+(std::size_t off, const constant_iterator& right)
+   inline friend constant_iterator operator+(std::size_t off, const constant_iterator& right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return std::ptrdiff_t(off) + right;  }
 
-   inline constant_iterator& operator-=(std::size_t off)
+   inline constant_iterator& operator-=(std::size_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this -= std::ptrdiff_t(off);  }
 
-   inline constant_iterator operator-(std::size_t off) const
+   inline constant_iterator operator-(std::size_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this - std::ptrdiff_t(off);  }
 
-   inline const T& operator[] (std::size_t off) const
+   inline const T& operator[] (std::size_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    { return (*this)[std::ptrdiff_t(off)]; }
 
    private:
    const T *   m_ptr;
    std::size_t m_num;
 
-   inline void increment()
+   inline void increment() BOOST_NOEXCEPT_OR_NOTHROW
    { --m_num; }
 
-   inline void decrement()
+   inline void decrement() BOOST_NOEXCEPT_OR_NOTHROW
    { ++m_num; }
 
-   inline bool equal(const this_type &other) const
+   inline bool equal(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_num == other.m_num;   }
 
-   inline bool less(const this_type &other) const
+   inline bool less(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return other.m_num < m_num;   }
 
-   inline const T & dereference() const
+   inline const T & dereference() const BOOST_NOEXCEPT_OR_NOTHROW
    { return *m_ptr; }
 
-   inline void advance(std::ptrdiff_t n)
+   inline void advance(std::ptrdiff_t n) BOOST_NOEXCEPT_OR_NOTHROW
    {  m_num = std::size_t(std::ptrdiff_t(m_num) - n); }
 
-   inline std::ptrdiff_t distance_to(const this_type &other)const
+   inline std::ptrdiff_t distance_to(const this_type &other)const BOOST_NOEXCEPT_OR_NOTHROW
    {  return std::ptrdiff_t(m_num - other.m_num);   }
 };
 
@@ -178,72 +178,72 @@ class value_init_construct_iterator
    typedef  value_init_construct_iterator<T> this_type;
 
    public:
-   inline explicit value_init_construct_iterator(std::size_t range_size)
+   inline explicit value_init_construct_iterator(std::size_t range_size) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_num(range_size){}
 
    //Constructors
-   inline value_init_construct_iterator()
+   inline value_init_construct_iterator() BOOST_NOEXCEPT_OR_NOTHROW
       :  m_num(0){}
 
-   inline value_init_construct_iterator& operator++()
+   inline value_init_construct_iterator& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    { increment();   return *this;   }
 
-   inline value_init_construct_iterator operator++(int)
+   inline value_init_construct_iterator operator++(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       value_init_construct_iterator result (*this);
       increment();
       return result;
    }
 
-   inline value_init_construct_iterator& operator--()
+   inline value_init_construct_iterator& operator--() BOOST_NOEXCEPT_OR_NOTHROW
    { decrement();   return *this;   }
 
-   inline value_init_construct_iterator operator--(int)
+   inline value_init_construct_iterator operator--(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       value_init_construct_iterator result (*this);
       decrement();
       return result;
    }
 
-   inline friend bool operator== (const value_init_construct_iterator& i, const value_init_construct_iterator& i2)
+   inline friend bool operator== (const value_init_construct_iterator& i, const value_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.equal(i2); }
 
-   inline friend bool operator!= (const value_init_construct_iterator& i, const value_init_construct_iterator& i2)
+   inline friend bool operator!= (const value_init_construct_iterator& i, const value_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i == i2); }
 
-   inline friend bool operator< (const value_init_construct_iterator& i, const value_init_construct_iterator& i2)
+   inline friend bool operator< (const value_init_construct_iterator& i, const value_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.less(i2); }
 
-   inline friend bool operator> (const value_init_construct_iterator& i, const value_init_construct_iterator& i2)
+   inline friend bool operator> (const value_init_construct_iterator& i, const value_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2 < i; }
 
-   inline friend bool operator<= (const value_init_construct_iterator& i, const value_init_construct_iterator& i2)
+   inline friend bool operator<= (const value_init_construct_iterator& i, const value_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i > i2); }
 
-   inline friend bool operator>= (const value_init_construct_iterator& i, const value_init_construct_iterator& i2)
+   inline friend bool operator>= (const value_init_construct_iterator& i, const value_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i < i2); }
 
-   inline friend std::ptrdiff_t operator- (const value_init_construct_iterator& i, const value_init_construct_iterator& i2)
+   inline friend std::ptrdiff_t operator- (const value_init_construct_iterator& i, const value_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2.distance_to(i); }
 
    //Arithmetic
-   inline value_init_construct_iterator& operator+=(std::ptrdiff_t off)
+   inline value_init_construct_iterator& operator+=(std::ptrdiff_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(off); return *this;   }
 
-   inline value_init_construct_iterator operator+(std::ptrdiff_t off) const
+   inline value_init_construct_iterator operator+(std::ptrdiff_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       value_init_construct_iterator other(*this);
       other.advance(off);
       return other;
    }
 
-   inline friend value_init_construct_iterator operator+(std::ptrdiff_t off, const value_init_construct_iterator& right)
+   inline friend value_init_construct_iterator operator+(std::ptrdiff_t off, const value_init_construct_iterator& right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return right + off; }
 
-   inline value_init_construct_iterator& operator-=(std::ptrdiff_t off)
+   inline value_init_construct_iterator& operator-=(std::ptrdiff_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(-off); return *this;   }
 
-   inline value_init_construct_iterator operator-(std::ptrdiff_t off) const
+   inline value_init_construct_iterator operator-(std::ptrdiff_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this + (-off);  }
 
    //This pseudo-iterator's dereference operations have no sense since value is not
@@ -251,22 +251,22 @@ class value_init_construct_iterator
    // 
    //const T& operator[](difference_type) const;
    //const T* operator->() const;
-   inline const value_init_t& operator*() const
+   inline const value_init_t& operator*() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return value_init;  }
 
    private:
    std::size_t  m_num;
 
-   inline void increment()
+   inline void increment() BOOST_NOEXCEPT_OR_NOTHROW
    { --m_num; }
 
-   inline void decrement()
+   inline void decrement() BOOST_NOEXCEPT_OR_NOTHROW
    { ++m_num; }
 
-   inline bool equal(const this_type &other) const
+   inline bool equal(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_num == other.m_num;   }
 
-   inline bool less(const this_type &other) const
+   inline bool less(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return other.m_num < m_num;   }
 
    inline const T & dereference() const
@@ -275,10 +275,10 @@ class value_init_construct_iterator
       return dummy;
    }
 
-   inline void advance(std::ptrdiff_t n)
+   inline void advance(std::ptrdiff_t n) BOOST_NOEXCEPT_OR_NOTHROW
    {  m_num = std::size_t(std::ptrdiff_t(m_num) - n); }
 
-   inline std::ptrdiff_t distance_to(const this_type &other)const
+   inline std::ptrdiff_t distance_to(const this_type &other)const BOOST_NOEXCEPT_OR_NOTHROW
    {  return std::ptrdiff_t(m_num - other.m_num);   }
 };
 
@@ -290,72 +290,72 @@ class default_init_construct_iterator
    typedef  default_init_construct_iterator<T> this_type;
 
    public:
-   inline explicit default_init_construct_iterator(std::size_t range_size)
+   inline explicit default_init_construct_iterator(std::size_t range_size) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_num(range_size){}
 
    //Constructors
-   inline default_init_construct_iterator()
+   inline default_init_construct_iterator() BOOST_NOEXCEPT_OR_NOTHROW
       :  m_num(0){}
 
-   inline default_init_construct_iterator& operator++()
+   inline default_init_construct_iterator& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    { increment();   return *this;   }
 
-   inline default_init_construct_iterator operator++(int)
+   inline default_init_construct_iterator operator++(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       default_init_construct_iterator result (*this);
       increment();
       return result;
    }
 
-   inline default_init_construct_iterator& operator--()
+   inline default_init_construct_iterator& operator--() BOOST_NOEXCEPT_OR_NOTHROW
    { decrement();   return *this;   }
 
-   inline default_init_construct_iterator operator--(int)
+   inline default_init_construct_iterator operator--(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       default_init_construct_iterator result (*this);
       decrement();
       return result;
    }
 
-   inline friend bool operator== (const default_init_construct_iterator& i, const default_init_construct_iterator& i2)
+   inline friend bool operator== (const default_init_construct_iterator& i, const default_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.equal(i2); }
 
-   inline friend bool operator!= (const default_init_construct_iterator& i, const default_init_construct_iterator& i2)
+   inline friend bool operator!= (const default_init_construct_iterator& i, const default_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i == i2); }
 
-   inline friend bool operator< (const default_init_construct_iterator& i, const default_init_construct_iterator& i2)
+   inline friend bool operator< (const default_init_construct_iterator& i, const default_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.less(i2); }
 
-   inline friend bool operator> (const default_init_construct_iterator& i, const default_init_construct_iterator& i2)
+   inline friend bool operator> (const default_init_construct_iterator& i, const default_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2 < i; }
 
-   inline friend bool operator<= (const default_init_construct_iterator& i, const default_init_construct_iterator& i2)
+   inline friend bool operator<= (const default_init_construct_iterator& i, const default_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i > i2); }
 
-   inline friend bool operator>= (const default_init_construct_iterator& i, const default_init_construct_iterator& i2)
+   inline friend bool operator>= (const default_init_construct_iterator& i, const default_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i < i2); }
 
-   inline friend std::ptrdiff_t operator- (const default_init_construct_iterator& i, const default_init_construct_iterator& i2)
+   inline friend std::ptrdiff_t operator- (const default_init_construct_iterator& i, const default_init_construct_iterator& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2.distance_to(i); }
 
    //Arithmetic
-   inline default_init_construct_iterator& operator+=(std::ptrdiff_t off)
+   inline default_init_construct_iterator& operator+=(std::ptrdiff_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(off); return *this;   }
 
-   inline default_init_construct_iterator operator+(std::ptrdiff_t off) const
+   inline default_init_construct_iterator operator+(std::ptrdiff_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       default_init_construct_iterator other(*this);
       other.advance(off);
       return other;
    }
 
-   inline friend default_init_construct_iterator operator+(std::ptrdiff_t off, const default_init_construct_iterator& right)
+   inline friend default_init_construct_iterator operator+(std::ptrdiff_t off, const default_init_construct_iterator& right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return right + off; }
 
-   inline default_init_construct_iterator& operator-=(std::ptrdiff_t off)
+   inline default_init_construct_iterator& operator-=(std::ptrdiff_t off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(-off); return *this;   }
 
-   inline default_init_construct_iterator operator-(std::ptrdiff_t off) const
+   inline default_init_construct_iterator operator-(std::ptrdiff_t off) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this + (-off);  }
 
    //This pseudo-iterator's dereference operations have no sense since value is not
@@ -368,16 +368,16 @@ class default_init_construct_iterator
    private:
    std::size_t  m_num;
 
-   inline void increment()
+   inline void increment() BOOST_NOEXCEPT_OR_NOTHROW
    { --m_num; }
 
-   inline void decrement()
+   inline void decrement() BOOST_NOEXCEPT_OR_NOTHROW
    { ++m_num; }
 
-   inline bool equal(const this_type &other) const
+   inline bool equal(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_num == other.m_num;   }
 
-   inline bool less(const this_type &other) const
+   inline bool less(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return other.m_num < m_num;   }
 
    inline const T & dereference() const
@@ -386,10 +386,10 @@ class default_init_construct_iterator
       return dummy;
    }
 
-   inline void advance(std::ptrdiff_t n)
+   inline void advance(std::ptrdiff_t n) BOOST_NOEXCEPT_OR_NOTHROW
    {  m_num = std::size_t(std::ptrdiff_t(m_num) - n); }
 
-   inline std::ptrdiff_t distance_to(const this_type &other) const
+   inline std::ptrdiff_t distance_to(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return std::ptrdiff_t(m_num - other.m_num);   }
 };
 
@@ -403,71 +403,71 @@ class emplace_iterator
 
    public:
    typedef std::ptrdiff_t difference_type;
-   inline explicit emplace_iterator(EmplaceFunctor&e)
+   inline explicit emplace_iterator(EmplaceFunctor&e) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_num(1), m_pe(&e){}
 
-   inline emplace_iterator()
+   inline emplace_iterator() BOOST_NOEXCEPT_OR_NOTHROW
       :  m_num(0), m_pe(0){}
 
-   inline this_type& operator++()
+   inline this_type& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    { increment();   return *this;   }
 
-   inline this_type operator++(int)
+   inline this_type operator++(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       this_type result (*this);
       increment();
       return result;
    }
 
-   inline this_type& operator--()
+   inline this_type& operator--() BOOST_NOEXCEPT_OR_NOTHROW
    { decrement();   return *this;   }
 
-   inline this_type operator--(int)
+   inline this_type operator--(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       this_type result (*this);
       decrement();
       return result;
    }
 
-   inline friend bool operator== (const this_type& i, const this_type& i2)
+   inline friend bool operator== (const this_type& i, const this_type& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.equal(i2); }
 
-   inline friend bool operator!= (const this_type& i, const this_type& i2)
+   inline friend bool operator!= (const this_type& i, const this_type& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i == i2); }
 
-   inline friend bool operator< (const this_type& i, const this_type& i2)
+   inline friend bool operator< (const this_type& i, const this_type& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i.less(i2); }
 
-   inline friend bool operator> (const this_type& i, const this_type& i2)
+   inline friend bool operator> (const this_type& i, const this_type& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2 < i; }
 
-   inline friend bool operator<= (const this_type& i, const this_type& i2)
+   inline friend bool operator<= (const this_type& i, const this_type& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i > i2); }
 
-   inline friend bool operator>= (const this_type& i, const this_type& i2)
+   inline friend bool operator>= (const this_type& i, const this_type& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return !(i < i2); }
 
-   inline friend difference_type operator- (const this_type& i, const this_type& i2)
+   inline friend difference_type operator- (const this_type& i, const this_type& i2) BOOST_NOEXCEPT_OR_NOTHROW
    { return i2.distance_to(i); }
 
    //Arithmetic
-   inline this_type& operator+=(difference_type off)
+   inline this_type& operator+=(difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(off); return *this;   }
 
-   inline this_type operator+(difference_type off) const
+   inline this_type operator+(difference_type off) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       this_type other(*this);
       other.advance(off);
       return other;
    }
 
-   inline friend this_type operator+(difference_type off, const this_type& right)
+   inline friend this_type operator+(difference_type off, const this_type& right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return right + off; }
 
-   inline this_type& operator-=(difference_type off)
+   inline this_type& operator-=(difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->advance(-off); return *this;   }
 
-   inline this_type operator-(difference_type off) const
+   inline this_type operator-(difference_type off) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this + (-off);  }
 
    private:
@@ -491,16 +491,16 @@ class emplace_iterator
    std::size_t m_num;
    EmplaceFunctor *            m_pe;
 
-   inline void increment()
+   inline void increment() BOOST_NOEXCEPT_OR_NOTHROW
    { --m_num; }
 
-   inline void decrement()
+   inline void decrement() BOOST_NOEXCEPT_OR_NOTHROW
    { ++m_num; }
 
-   inline bool equal(const this_type &other) const
+   inline bool equal(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_num == other.m_num;   }
 
-   inline bool less(const this_type &other) const
+   inline bool less(const this_type &other) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return other.m_num < m_num;   }
 
    inline const T & dereference() const
@@ -509,10 +509,10 @@ class emplace_iterator
       return dummy;
    }
 
-   inline void advance(difference_type n)
+   inline void advance(difference_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {  m_num = std::size_t(difference_type(m_num) - n); }
 
-   inline difference_type distance_to(const this_type &other)const
+   inline difference_type distance_to(const this_type &other)const BOOST_NOEXCEPT_OR_NOTHROW
    {  return difference_type(m_num - other.m_num);   }
 };
 
