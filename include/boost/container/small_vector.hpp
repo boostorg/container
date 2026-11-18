@@ -517,6 +517,7 @@ class small_vector_base
    //! `small_vector_base` publicly derives from `boost::container::vector`, so all of its
    //! member functions are available. They are listed here for convenience.
    //! @{
+
    //! @copydoc ::boost::container::vector::assign(InIt, InIt)
    template <class InIt>
    void assign(InIt first, InIt last
@@ -1159,6 +1160,7 @@ class small_vector
    //! `boost::container::vector`), so all of its member functions are available. They are
    //! listed here for convenience.
    //! @{
+
    //! @copydoc ::boost::container::vector::assign(InIt, InIt)
    template <class InIt>
    void assign(InIt first, InIt last

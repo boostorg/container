@@ -376,14 +376,16 @@ class set
    inline set& operator=(BOOST_COPY_ASSIGN_REF(set) x)
    {  return static_cast<set&>(this->base_t::operator=(static_cast<const base_t&>(x)));  }
 
-   //! <b>Effects</b>: this->swap(x.get()).
+   //! <b>Effects</b>: Move assignment. If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is true or this->get_allocator() == x.get_allocator(), the elements of x are transferred
+   //!   to *this. Otherwise, each element of x is moved to *this.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and (allocation throws or value_type's move constructor throws)
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    inline set& operator=(BOOST_RV_REF(set) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&

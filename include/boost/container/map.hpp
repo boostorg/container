@@ -403,14 +403,16 @@ class map
    inline map& operator=(BOOST_COPY_ASSIGN_REF(map) x)
    {  return static_cast<map&>(this->base_t::operator=(static_cast<const base_t&>(x)));  }
 
-   //! <b>Effects</b>: this->swap(x.get()).
+   //! <b>Effects</b>: Move assignment. If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is true or this->get_allocator() == x.get_allocator(), the elements of x are transferred
+   //!   to *this. Otherwise, each element of x is moved to *this.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and (allocation throws or value_type's move constructor throws)
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    inline map& operator=(BOOST_RV_REF(map) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
@@ -1931,7 +1933,7 @@ class multimap
       : base_t(ordered_range, il.begin(), il.end())
    {}
 
-   //! <b>Effects</b>: Constructs an empty map using the specified comparison object and
+   //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object and
    //! inserts elements from the ordered range [il.begin(), il.end()). This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
@@ -1944,8 +1946,8 @@ class multimap
       : base_t(ordered_range, il.begin(), il.end(), comp)
    {}
 
-   //! <b>Effects</b>: Constructs an empty map and
-   //! inserts elements from the ordered range [il.begin(), il.end()). This function
+   //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object and
+   //! allocator, and inserts elements from the ordered range [il.begin(), il.end()). This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
    //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
@@ -1976,7 +1978,7 @@ class multimap
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
-   //! <b>Effects</b>: Copy constructs a multimap.
+   //! <b>Effects</b>: Copy constructs a multimap using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    inline multimap(const multimap& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
@@ -2006,7 +2008,9 @@ class multimap
    inline multimap& operator=(BOOST_COPY_ASSIGN_REF(multimap) x)
    {  return static_cast<multimap&>(this->base_t::operator=(static_cast<const base_t&>(x)));  }
 
-   //! <b>Effects</b>: this->swap(x.get()).
+   //! <b>Effects</b>: Move assignment. If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is true or this->get_allocator() == x.get_allocator(), the elements of x are transferred
+   //!   to *this. Otherwise, each element of x is moved to *this.
    //!
    //! <b>Complexity</b>: Constant.
    inline multimap& operator=(BOOST_RV_REF(multimap) x)

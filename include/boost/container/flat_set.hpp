@@ -394,12 +394,14 @@ class flat_set
    inline flat_set& operator=(BOOST_COPY_ASSIGN_REF(flat_set) x)
    {  return static_cast<flat_set&>(this->tree_t::operator=(static_cast<const tree_t&>(x)));  }
 
+   //! <b>Effects</b>: Move assignment. Move assigns the underlying sequence of x to *this.
+   //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and (allocation throws or value_type's move constructor throws)
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    inline flat_set& operator=(BOOST_RV_REF(flat_set) x)
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<tree_t>::value)
    {  return static_cast<flat_set&>(this->tree_t::operator=(BOOST_MOVE_BASE(tree_t, x)));  }
@@ -1481,7 +1483,7 @@ class flat_multiset
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-   //! @copydoc ::boost::container::flat_set::flat_set(std::initializer_list<value_type)
+   //! @copydoc ::boost::container::flat_set::flat_set(std::initializer_list<value_type>)
    inline flat_multiset(std::initializer_list<value_type> il)
       : tree_t(false, il.begin(), il.end())
    {}

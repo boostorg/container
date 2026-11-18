@@ -555,15 +555,14 @@ class flat_map
    inline flat_map& operator=(BOOST_COPY_ASSIGN_REF(flat_map) x)
    {  m_flat_tree = x.m_flat_tree;   return *this;  }
 
-   //! <b>Effects</b>: Move constructs a flat_map.
-   //!   Constructs *this using x's resources.
+   //! <b>Effects</b>: Move assignment. Move assigns the underlying sequence of x to *this.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and (allocation throws or value_type's move constructor throws)
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    inline flat_map& operator=(BOOST_RV_REF(flat_map) x)
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<impl_tree_t>::value)
    {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
@@ -2313,7 +2312,7 @@ class flat_multimap
       : m_flat_tree(ordered_range, first, last, comp, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
-   //! <b>Effects</b>: Constructs an empty flat_multimap using the specified comparison object and
+   //! <b>Effects</b>: Constructs an empty flat_multimap using the specified allocator and
    //! inserts elements from the ordered range [first ,last). This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
@@ -2476,6 +2475,8 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Constant.
    inline
+   //! <b>Effects</b>: Move assignment. Move assigns the underlying sequence of x to *this.
+   //!
    flat_multimap& operator=(BOOST_RV_REF(flat_multimap) x)
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<impl_tree_t>::value)
       {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
