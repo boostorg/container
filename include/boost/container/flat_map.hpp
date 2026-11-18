@@ -151,7 +151,7 @@ inline typename Sequence::size_type flat_map_erase_if(Sequence &seq, Pred pred)
 //! Using vector-like sequence containers means that inserting a new element into a flat_map might invalidate
 //! previous iterators and references (unless that sequence container is <i>stable_vector</i> or a similar
 //! container that offers stable pointers and references). Similarly, erasing an element might invalidate
-//! iterators and references pointing to elements that come after (their keys are bigger) the erased element.
+//! iterators and references pointing to the erased element and to the elements that come after it.
 //!
 //! This container provides random-access iterators.
 //!
@@ -1416,7 +1416,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: N log(size()+N).
    //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Can invalidate all iterators and references, also when no element is inserted.
    template <class InputIterator>
    inline void insert(InputIterator first, InputIterator last)
    {  m_flat_tree.insert_unique_range(first, last);  }
@@ -1432,7 +1432,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: Linear.
    //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Can invalidate all iterators and references, also when no element is inserted.
    //!
    //! <b>Note</b>: Non-standard extension.
    template <class InputIterator>
@@ -1445,7 +1445,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: N log(N).
    //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Can invalidate all iterators and references, also when no element is inserted.
    inline void insert(std::initializer_list<value_type> il)
    {
       m_flat_tree.insert_unique_range( BOOST_CONTAINER_FORCE(impl_initializer_list, il).begin()
@@ -1461,7 +1461,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: Linear.
    //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Can invalidate all iterators and references, also when no element is inserted.
    //!
    //! <b>Note</b>: Non-standard extension.
    inline void insert(ordered_unique_range_t, std::initializer_list<value_type> il)
@@ -1519,10 +1519,10 @@ class flat_map
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
-   //! <b>Complexity</b>: Linear to the elements with keys bigger than p
+   //! <b>Complexity</b>: Linear to the elements after p
    //!
-   //! <b>Note</b>: Invalidates elements with keys
-   //!   not less than the erased element.
+   //! <b>Note</b>: Invalidates iterators and references to the erased element and to the
+   //!   elements after it, and the past-the-end iterator.
    inline iterator erase(const_iterator p)
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,
@@ -2066,7 +2066,7 @@ namespace container {
 //! Using vector-like sequence containers means that inserting a new element into a flat_multimap might invalidate
 //! previous iterators and references (unless that sequence container is <i>stable_vector</i> or a similar
 //! container that offers stable pointers and references). Similarly, erasing an element might invalidate
-//! iterators and references pointing to elements that come after (their keys are bigger) the erased element.
+//! iterators and references pointing to the erased element and to the elements that come after it.
 //!
 //! This container provides random-access iterators.
 //!
@@ -2952,10 +2952,10 @@ class flat_multimap
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
-   //! <b>Complexity</b>: Linear to the elements with keys bigger than p
+   //! <b>Complexity</b>: Linear to the elements after p
    //!
-   //! <b>Note</b>: Invalidates elements with keys
-   //!   not less than the erased element.
+   //! <b>Note</b>: Invalidates iterators and references to the erased element and to the
+   //!   elements after it, and the past-the-end iterator.
    inline iterator erase(const_iterator p)
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,

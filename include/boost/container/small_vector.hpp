@@ -811,8 +811,10 @@ inline typename small_vector_allocator<T, VoidAlloc, Options>::pointer
 //!
 //! All `boost::container::vector` member functions are inherited. See `vector` documentation for details.
 //!
-//! Any change to the capacity of the vector, including decreasing its size such as with the shrink_to_fit method, will
-//! cause the vector to permanently switch to dynamically allocated storage.
+//! When the size grows past the capacity of the in-place storage, the elements are moved to dynamically allocated
+//! storage, and they stay there when the size decreases. small_vector::shrink_to_fit can move the elements
+//! back to the in-place storage (see its documentation). Each move between the in-place storage and dynamically
+//! allocated storage invalidates all iterators, references and pointers to elements.
 //!
 //! \tparam T The type of object that is stored in the small_vector
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
@@ -1114,9 +1116,14 @@ class small_vector
       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
    {  x.swap(y);  }
 
-   //! <b>Effects</b>: Tries to reduce capacity() to the current size(). Once the capacity
-   //!   changes, the container permanently switches to dynamically allocated storage even if
-   //!   the resulting size would fit in the internal buffer.
+   //! <b>Effects</b>: Tries to reduce capacity() to the current size(). If dynamically allocated
+   //!   storage is in use and size() is not greater than the capacity of the in-place storage,
+   //!   the elements are moved to the in-place storage and the dynamic storage is deallocated.
+   //!   Otherwise, if size() is less than capacity(), the elements are moved to a new dynamically
+   //!   allocated buffer of size() elements. If the in-place storage is in use, there is no effect.
+   //!
+   //! <b>Note</b>: If the elements are moved, all iterators, references and pointers to elements
+   //!   are invalidated.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy/move constructor throws.
    //!

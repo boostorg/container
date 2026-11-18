@@ -766,9 +766,15 @@ counterpart of [classref boost::container::deque deque].
 
 Unlike a single contiguous buffer, segmented storage avoids reallocating and moving all elements when the container
 grows: new blocks are allocated as needed. This can reduce peak memory and improve performance when elements are
-expensive to move or when growth is large. Inserting or erasing at the end does not invalidate iterators or
-references/pointers to existing elements. Insertions and erasures in the middle invalidate iterators and references
-in the same way as for `deque`.
+expensive to move or when growth is large. Elements never move when the container grows, but iterators also refer to
+the internal block map, which can be reallocated. In consequence:
+
+* An insertion invalidates all iterators, including the past-the-end iterator. References and pointers to elements
+  before the insertion point remain valid. For an insertion at the end (`push_back`, `emplace_back`) this means
+  that all references and pointers remain valid.
+* An erasure invalidates iterators, references and pointers to the erased elements and to the elements after them,
+  and the past-the-end iterator. Iterators, references and pointers to elements before the erased elements remain
+  valid. Unlike `deque`, `segtor` never moves the elements before the erasure point.
 
 The container can be configured via [classref boost::container::segtor_options segtor_options]
 to control block size and other parameters.
@@ -784,7 +790,8 @@ to control block size and other parameters.
 with:
 
 *  Constant-time insertion and erasure
-*  ['element stability]: pointers/iterators to an element remain valid until the element is erased.
+*  ['element stability]: references/pointers/iterators to an element remain valid until the element is erased
+   (`shrink_to_fit` and `sort` are the exceptions, as they can move elements).
 
 [c++]
 
@@ -802,11 +809,11 @@ with:
    
      // Erase some of the elements
      erase_if(h, [](int x) { return x % 2 != 0;});
-     assert(*it = 100); // iterator still valid
-   
+     assert(*it == 100); // iterator still valid
+
      // Insert many more elements
      for(int i = 200; i < 10000; ++i) h.insert(i);
-     assert(*it = 100); // iterator still valid
+     assert(*it == 100); // iterator still valid
    }
 
 
@@ -852,8 +859,9 @@ If you're familiar with STL containers such as `std::list` and `std::vector`, ge
 is entirely straightforward as its API is mostly analogous. The key characteristics that set this container apart are:
 
 
-* Pointers and iterators to an element remain valid as long as the element is not erased. `hub` will ['not] reallocate
-  elements as it grows in size.
+* References, pointers and iterators to an element remain valid as long as the element is not erased. `hub` will
+  ['not] reallocate elements as it grows in size. Only `shrink_to_fit` and `sort` can move elements, and they can
+  invalidate references, pointers and iterators to elements that are not erased.
 * Insertion and erasure are constant-time and very fast. Memory is allocated in element blocks with fixed capacity (64
   elements per block in this implementation), and the container keeps track of available positions, including those of
   erased elements, to use them for further insertions and keep the number of memory allocations to the minimum

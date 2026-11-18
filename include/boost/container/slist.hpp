@@ -361,17 +361,20 @@ class slist
       return *this;
    }
 
-   //! <b>Effects</b>: Makes *this contain the same elements as x.
+   //! <b>Effects</b>: Move assignment. If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is true or this->get_allocator() == x.get_allocator(), the elements of x are transferred
+   //!   to *this: iterators, references and pointers to them remain valid and refer to elements
+   //!   of *this. Otherwise, each element of x is moved to an element of *this.
    //!
-   //! <b>Postcondition</b>: this->size() == x.size(). *this contains a copy
-   //! of each of x's elements.
+   //! <b>Postcondition</b>: *this contains the elements x had before the function. If the
+   //!   elements were transferred, x.empty(). Otherwise, x is in a valid but unspecified state.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and (allocation throws or value_type's move constructor throws)
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    slist& operator=(BOOST_RV_REF(slist) x)
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
@@ -1001,14 +1004,13 @@ class slist
    //
    //////////////////////////////////////////////
 
-   //! <b>Requires</b>: p must point to an element contained
-   //!   by the list. x != *this
+   //! <b>Requires</b>: prev_p must be a valid iterator of this. x != *this.
+   //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers all the elements of list x to this list, after the
-   //!   the element pointed by p. No destructors or copy constructors are called.
+   //!   the element pointed by prev_p. No destructors or copy constructors are called.
    //!
-   //! <b>Throws</b>: runtime_error if this' allocator and x's allocator
-   //!   are not equal.
+   //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the elements in x.
    //!
@@ -1021,14 +1023,13 @@ class slist
       this->icont().splice_after(prev_p.get(), x.icont());
    }
 
-   //! <b>Requires</b>: p must point to an element contained
-   //!   by the list. x != *this
+   //! <b>Requires</b>: prev_p must be a valid iterator of this. x != *this.
+   //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers all the elements of list x to this list, after the
-   //!   the element pointed by p. No destructors or copy constructors are called.
+   //!   the element pointed by prev_p. No destructors or copy constructors are called.
    //!
-   //! <b>Throws</b>: runtime_error if this' allocator and x's allocator
-   //!   are not equal.
+   //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the elements in x.
    //!
@@ -1038,10 +1039,10 @@ class slist
    {  this->splice_after(prev_p, BOOST_MOVE_TO_LV(x));  }
 
    //! <b>Requires</b>: prev_p must be a valid iterator of this.
-   //!   i must point to an element contained in list x.
+   //!   prev must be a valid iterator of list x and next(prev) must point to an element of x.
    //!   this' allocator and x's allocator shall compare equal.
    //!
-   //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
+   //! <b>Effects</b>: Transfers the element that follows prev, from list x to this list,
    //!   after the element pointed by prev_p.
    //!   If prev_p == prev or prev_p == ++prev, this function is a null operation.
    //!
@@ -1058,10 +1059,10 @@ class slist
    }
 
    //! <b>Requires</b>: prev_p must be a valid iterator of this.
-   //!   i must point to an element contained in list x.
+   //!   prev must be a valid iterator of list x and next(prev) must point to an element of x.
    //!   this' allocator and x's allocator shall compare equal.
    //!
-   //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
+   //! <b>Effects</b>: Transfers the element that follows prev, from list x to this list,
    //!   after the element pointed by prev_p.
    //!   If prev_p == prev or prev_p == ++prev, this function is a null operation.
    //!

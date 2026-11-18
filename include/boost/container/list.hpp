@@ -335,17 +335,20 @@ class list
       return *this;
    }
 
-   //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
+   //! <b>Effects</b>: Move assignment. If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is true or this->get_allocator() == x.get_allocator(), the elements of x are transferred
+   //!   to *this: iterators, references and pointers to them remain valid and refer to elements
+   //!   of *this. Otherwise, each element of x is moved to an element of *this.
    //!
-   //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
-   //!   before the function.
+   //! <b>Postcondition</b>: *this contains the elements x had before the function. If the
+   //!   elements were transferred, x.empty(). Otherwise, x is in a valid but unspecified state.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and (allocation throws or value_type's move constructor throws)
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    list& operator=(BOOST_RV_REF(list) x)
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)

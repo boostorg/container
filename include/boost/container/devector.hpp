@@ -1819,8 +1819,9 @@ class devector
    /**
    * **Effects**: Pushes a new element to the front of the devector.
    * The element is constructed in-place, using the perfect forwarded `args`
-   * as constructor arguments. Invalidates iterators if reallocation is needed.
-   * (`front_free_capacity() == 0`)
+   * as constructor arguments. If `front_free_capacity() == 0`, the elements are
+   * relocated inside the buffer or moved to a new buffer and all iterators are
+   * invalidated. Otherwise, no iterator is invalidated.
    *
    * **Requires**: `T` shall be [EmplaceConstructible] from `args` and [MoveInsertable] into `*this`.
    *
@@ -1885,8 +1886,9 @@ class devector
    * [CopyInsertable]: http://en.cppreference.com/w/cpp/concept/CopyInsertable
    *
    * **Effects**: Pushes the copy of `x` to the front of the devector.
-   * Invalidates iterators if reallocation is needed.
-   * (`front_free_capacity() == 0`)
+   * If `front_free_capacity() == 0`, the elements are relocated inside the buffer
+   * or moved to a new buffer and all iterators are invalidated. Otherwise, no
+   * iterator is invalidated.
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this`.
    *
@@ -1905,8 +1907,9 @@ class devector
    * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
    *
    * **Effects**: Move constructs a new element at the front of the devector using `x`.
-   * Invalidates iterators if reallocation is needed.
-   * (`front_free_capacity() == 0`)
+   * If `front_free_capacity() == 0`, the elements are relocated inside the buffer
+   * or moved to a new buffer and all iterators are invalidated. Otherwise, no
+   * iterator is invalidated.
    *
    * **Requires**: `T` shall be [MoveInsertable] into `*this`.
    *
@@ -1945,8 +1948,9 @@ class devector
    /**
    * **Effects**: Pushes a new element to the back of the devector.
    * The element is constructed in-place, using the perfect forwarded `args`
-   * as constructor arguments. Invalidates iterators if reallocation is needed.
-   * (`back_free_capacity() == 0`)
+   * as constructor arguments. If `back_free_capacity() == 0`, the elements are 
+   * relocated inside the buffer or moved to a new buffer and all iterators
+   * are invalidated. Otherwise, only the past-the-end iterator is invalidated.
    *
    * **Requires**: `T` shall be [EmplaceConstructible] from `args` and [MoveInsertable] into `*this`,
    * and [MoveAssignable].
@@ -2010,8 +2014,9 @@ class devector
    * [CopyInsertable]: http://en.cppreference.com/w/cpp/concept/CopyInsertable
    *
    * **Effects**: Pushes the copy of `x` to the back of the devector.
-   * Invalidates iterators if reallocation is needed.
-   * (`back_free_capacity() == 0`)
+   * If `back_free_capacity() == 0`, the elements are relocated inside the buffer
+   * or moved to a new buffer and all iterators are invalidated. Otherwise, only the
+   * past-the-end iterator is invalidated.
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this`.
    *
@@ -2030,8 +2035,9 @@ class devector
    * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
    *
    * **Effects**: Move constructs a new element at the back of the devector using `x`.
-   * Invalidates iterators if reallocation is needed.
-   * (`back_free_capacity() == 0`)
+   * If `back_free_capacity() == 0`, the elements are relocated inside the buffer
+   * or moved to a new buffer and all iterators are invalidated. Otherwise, only
+   * the past-the-end iterator is invalidated.
    *
    * **Requires**: `T` shall be [MoveInsertable] into `*this`.
    *
@@ -2070,7 +2076,11 @@ class devector
    /**
    * **Effects**: Constructs a new element before the element pointed by `position`.
    * The element is constructed in-place, using the perfect forwarded `args`
-   * as constructor arguments. Invalidates iterators if reallocation is needed.
+   * as constructor arguments.
+   * If the elements are relocated inside the buffer or moved to a new buffer, all iterators are
+   * invalidated. Otherwise, the elements on one side of `position` are moved: if the elements after
+   * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
+   * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
    *
    * **Requires**: `T` shall be [EmplaceConstructible], and [MoveInsertable] into `*this`,
    * and [MoveAssignable].
@@ -2215,7 +2225,11 @@ class devector
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    /**
    * **Effects**: Copy constructs a new element before the element pointed by `position`,
-   * using `x` as constructor argument. Invalidates iterators if reallocation is needed.
+   * using `x` as constructor argument.
+   * If the elements are relocated inside the buffer or moved to a new buffer, all iterators are
+   * invalidated. Otherwise, the elements on one side of `position` are moved: if the elements after
+   * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
+   * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this` and and [CopyAssignable].
    *
@@ -2233,7 +2247,11 @@ class devector
 
    /**
    * **Effects**: Move constructs a new element before the element pointed by `position`,
-   * using `x` as constructor argument. Invalidates iterators if reallocation is needed.
+   * using `x` as constructor argument.
+   * If the elements are relocated inside the buffer or moved to a new buffer, all iterators are
+   * invalidated. Otherwise, the elements on one side of `position` are moved: if the elements after
+   * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
+   * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
    *
    * **Requires**: `T` shall be [MoveInsertable] into `*this` and and [CopyAssignable].
    *
@@ -2255,7 +2273,11 @@ class devector
 
    /**
    * **Effects**: Copy constructs `n` elements before the element pointed by `position`,
-   * using `x` as constructor argument. Invalidates iterators if reallocation is needed.
+   * using `x` as constructor argument.
+   * If the elements are relocated inside the buffer or moved to a new buffer, all iterators are
+   * invalidated. Otherwise, the elements on one side of `position` are moved: if the elements after
+   * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
+   * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this` and and [CopyAssignable].
    *
@@ -2280,7 +2302,12 @@ class devector
    /**
    * **Effects**: Copy constructs elements before the element pointed by position
    * using each element in the range pointed by `first` and `last` as constructor arguments.
-   * Invalidates iterators if reallocation is needed.
+   * If the elements are relocated inside the buffer or moved to a new buffer, all iterators are
+   * invalidated. Otherwise, the elements on one side of `position` are moved: if the elements after
+   * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
+   * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
+   * If the iterators are input iterators, the new elements are inserted at the back and then
+   * rotated to `position`, so the iterators in [`position`, `end()`] are always invalidated.
    *
    * **Requires**: `T` shall be [EmplaceConstructible] into `*this` from `*first`. If the specified iterator
    * does not meet the forward iterator requirements, `T` shall also be [MoveInsertable] into `*this`

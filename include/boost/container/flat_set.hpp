@@ -63,7 +63,7 @@ class flat_multiset;
 //! Using vector-like sequence containers means that inserting a new element into a flat_set might invalidate
 //! previous iterators and references (unless that sequence container is <i>stable_vector</i> or a similar
 //! container that offers stable pointers and references). Similarly, erasing an element might invalidate
-//! iterators and references pointing to elements that come after (their keys are bigger) the erased element.
+//! iterators and references pointing to the erased element and to the elements that come after it.
 //!
 //! This container provides random-access iterators.
 //!
@@ -767,7 +767,7 @@ class flat_set
    //!
    //! <b>Complexity</b>: N log(N).
    //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Can invalidate all iterators and references, also when no element is inserted.
    template <class InputIterator>
    inline void insert(InputIterator first, InputIterator last)
       {  this->tree_t::insert_unique_range(first, last);  }
@@ -781,7 +781,7 @@ class flat_set
    //!
    //! <b>Complexity</b>: Linear.
    //!
-   //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Non-standard extension. Can invalidate all iterators and references, also when no element is inserted.
    template <class InputIterator>
    inline void insert(ordered_unique_range_t, InputIterator first, InputIterator last)
       {  this->tree_t::insert_unique_range(ordered_unique_range, first, last);  }
@@ -792,7 +792,7 @@ class flat_set
    //!
    //! <b>Complexity</b>: N log(N).
    //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Can invalidate all iterators and references, also when no element is inserted.
    inline void insert(std::initializer_list<value_type> il)
    {  this->tree_t::insert_unique_range(il.begin(), il.end()); }
 
@@ -804,7 +804,7 @@ class flat_set
    //!
    //! <b>Complexity</b>: Linear.
    //!
-   //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
+   //! <b>Note</b>: Non-standard extension. Can invalidate all iterators and references, also when no element is inserted.
    inline void insert(ordered_unique_range_t, std::initializer_list<value_type> il)
    {  this->tree_t::insert_unique_range(ordered_unique_range, il.begin(), il.end()); }
 #endif
@@ -846,10 +846,10 @@ class flat_set
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
-   //! <b>Complexity</b>: Linear to the elements with keys bigger than p
+   //! <b>Complexity</b>: Linear to the elements after p
    //!
-   //! <b>Note</b>: Invalidates elements with keys
-   //!   not less than the erased element.
+   //! <b>Note</b>: Invalidates iterators and references to the erased element and to the
+   //!   elements after it, and the past-the-end iterator.
    iterator erase(const_iterator p);
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
@@ -1316,7 +1316,7 @@ namespace container {
 //! Using vector-like sequence containers means that inserting a new element into a flat_multiset might invalidate
 //! previous iterators and references (unless that sequence container is <i>stable_vector</i> or a similar
 //! container that offers stable pointers and references). Similarly, erasing an element might invalidate
-//! iterators and references pointing to elements that come after (their keys are bigger) the erased element.
+//! iterators and references pointing to the erased element and to the elements that come after it.
 //!
 //! This container provides random-access iterators.
 //!

@@ -709,8 +709,13 @@ class basic_string_base
 //!
 //! In this implementation, begin(),
 //! end(), rbegin(), rend(), operator[], c_str(), and data() do not invalidate iterators.
-//! In this implementation, iterators are only invalidated by member functions that
-//! explicitly change the string's contents.
+//!
+//! Member functions that change the string's contents can invalidate iterators,
+//! references and pointers to its characters. Member functions that change capacity(),
+//! such as reserve() and shrink_to_fit(), invalidate all of them, also when the contents
+//! do not change. A short string stores its characters inside the object (small string
+//! optimization), so after swap() or move assignment, iterators, references and pointers
+//! to the characters of a short string are invalidated.
 //!
 //! \tparam CharT The type of character it contains.
 //! \tparam Traits The Character Traits type, which encapsulates basic character operations

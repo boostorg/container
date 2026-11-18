@@ -894,8 +894,10 @@ struct block_typedefs
 #endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A hub is a container with constant-time insertion and erasure and element
-//! stability: pointers and iterators to an element remain valid until the
-//! element is erased. It is a nearly drop-in, more compact alternative to the
+//! stability: references, pointers and iterators to an element remain valid until the
+//! element is erased. The exceptions are shrink_to_fit() and sort(), which can move
+//! elements, and move construction or move assignment with unequal allocators (see
+//! the notes of each function). It is a nearly drop-in, more compact alternative to the
 //! C++26 \c std::hive.
 //!
 //! Elements of a hub are stored in \e blocks of contiguous memory, each with a fixed
