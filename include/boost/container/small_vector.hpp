@@ -476,6 +476,25 @@ class small_vector_base
       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
    {  x.swap(y);  }
 
+   //! <b>Effects</b>: If the in-place storage is in use, there is no effect. Otherwise, if size()
+   //!   is less than capacity(), the elements are moved to a new dynamically allocated buffer of
+   //!   size() elements. If the container is empty, the dynamic storage is deallocated.
+   //!
+   //! <b>Note</b>: small_vector_base does not know the capacity of the in-place storage, so,
+   //!   unlike small_vector::shrink_to_fit, it never moves the elements back to the in-place
+   //!   storage. After the dynamic storage of an empty container is deallocated, the in-place
+   //!   storage is not used again. If the elements are moved, all iterators, references and
+   //!   pointers to elements are invalidated.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or T's copy/move constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to size().
+   inline void shrink_to_fit()
+   {
+      if (!this->is_small())
+         this->base_type::shrink_to_fit();
+   }
+
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
    typedef T                                                                           value_type;
@@ -602,9 +621,6 @@ class small_vector_base
 
    //! @copydoc ::boost::container::vector::reserve(size_type)
    inline void reserve(size_type new_cap);
-
-   //! @copydoc ::boost::container::vector::shrink_to_fit()
-   inline void shrink_to_fit();
 
    //! @copydoc ::boost::container::vector::front()
    BOOST_CONTAINER_NODISCARD inline reference front() BOOST_NOEXCEPT_OR_NOTHROW;

@@ -764,6 +764,31 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_i
    < boost::container::small_vector<int, 4> >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
+//shrink_to_fit() called through small_vector_base must not leave the in-place storage
+bool test_base_shrink_to_fit_keeps_internal_buffer()
+{
+   typedef small_vector<int, 4> sv_t;
+   typedef sv_t::base_type svb_t;
+   sv_t v;
+   svb_t &b = v;
+   v.push_back(1);
+   v.push_back(2);
+   b.shrink_to_fit();
+   if(!v.is_small() || v.capacity() != sv_t::static_capacity || v.size() != 2u || v[0] != 1 || v[1] != 2)
+      return false;
+   v.clear();
+   b.shrink_to_fit();
+   if(!v.is_small() || v.capacity() != sv_t::static_capacity)
+      return false;
+   //Dynamic storage: the elements go to a new dynamic buffer of size() elements
+   for(int i = 0; i != 10; ++i)
+      v.push_back(i);
+   b.shrink_to_fit();
+   if(v.is_small() || v.capacity() != 10u || v.size() != 10u || v[0] != 0 || v[9] != 9)
+      return false;
+   return true;
+}
+
 int main()
 {
    if(!test_move_assignment_from_internal_buffer_can_throw<4>())
@@ -884,6 +909,9 @@ int main()
    }
 
    if(!test_assignment_with_propagated_unequal_allocators<4u>())
+      return 1;
+
+   if(!test_base_shrink_to_fit_keeps_internal_buffer())
       return 1;
 
    return 0;
