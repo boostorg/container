@@ -996,7 +996,7 @@ class devector
    *
    * **Complexity**: Constant if allocator_traits_type::
    *   propagate_on_container_move_assignment is true or
-   *   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   *   this->get_allocator() == x.get_allocator(). Linear otherwise.
    */
    devector& operator=(BOOST_RV_REF(devector) x)
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
@@ -1434,9 +1434,9 @@ class devector
 
    /**
     * **Effects**: If `sz` is greater than the size of `*this`,
-    * additional value-initialized elements are inserted
+    * additional default-initialized elements are inserted
     * to the front. Invalidates iterators if reallocation is needed.
-    * If `sz` is smaller than than the size of `*this`,
+    * If `sz` is smaller than the size of `*this`,
     * elements are popped from the front.
     *
     * **Requires**: T shall be [MoveInsertable] into *this and default_initializable.
@@ -1504,9 +1504,9 @@ class devector
 
    /**
     * **Effects**: If `sz` is greater than the size of `*this`,
-    * additional value-initialized elements are inserted
+    * additional default-initialized elements are inserted
     * to the back. Invalidates iterators if reallocation is needed.
-    * If `sz` is smaller than than the size of `*this`,
+    * If `sz` is smaller than the size of `*this`,
     * elements are popped from the back.
     *
     * **Requires**: T shall be [MoveInsertable] into *this and default initializable.
@@ -2235,7 +2235,7 @@ class devector
    * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
    * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
    *
-   * **Requires**: `T` shall be [CopyInsertable] into `*this` and and [CopyAssignable].
+   * **Requires**: `T` shall be [CopyInsertable] into `*this` and [CopyAssignable].
    *
    * **Returns**: Iterator pointing to the newly constructed element.
    *
@@ -2257,7 +2257,7 @@ class devector
    * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
    * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
    *
-   * **Requires**: `T` shall be [MoveInsertable] into `*this` and and [CopyAssignable].
+   * **Requires**: `T` shall be [MoveInsertable] into `*this` and [CopyAssignable].
    *
    * **Returns**: Iterator pointing to the newly constructed element.
    *
@@ -2283,7 +2283,7 @@ class devector
    * `position` are moved, the iterators in [`position`, `end()`] are invalidated; if the elements
    * before `position` are moved, the iterators in [`begin()`, `position`) are invalidated.
    *
-   * **Requires**: `T` shall be [CopyInsertable] into `*this` and and [CopyAssignable].
+   * **Requires**: `T` shall be [CopyInsertable] into `*this` and [CopyAssignable].
    *
    * **Returns**: Iterator pointing to the first inserted element, or `position`, if `n` is zero.
    *

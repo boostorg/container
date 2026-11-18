@@ -581,6 +581,17 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    void resize(size_type new_size);
+
+   //! <b>Effects</b>: Inserts or erases elements at the end such that
+   //!   the size becomes n. New elements are default initialized.
+   //!
+   //! <b>Throws</b>: If memory allocation throws, or T's constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to the difference between size() and new_size.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   void resize(size_type new_size, default_init_t);
+
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are copy constructed from x.
    //!

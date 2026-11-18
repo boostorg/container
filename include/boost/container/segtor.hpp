@@ -807,6 +807,17 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    void resize(size_type new_size, const value_type& x);
 
+   //! <b>Effects</b>: Tries to deallocate the excess of memory created
+   //!   with previous allocations. The size of the segtor is unchanged.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer to an element is invalidated. If the segtor
+   //!   is empty, the past-the-end iterator is invalidated.
+   void shrink_to_fit();
+
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.

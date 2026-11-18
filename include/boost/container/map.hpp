@@ -855,9 +855,6 @@ class map
       insert(BOOST_FWD_REF(Pair) x)
    {  return this->base_t::emplace_unique(boost::forward<Pair>(x)); }
 
-   inline iterator insert(const_iterator p, const value_type& x)
-   { return this->base_t::insert_unique_hint_convertible(p, x); }
-
    //! <b>Effects</b>: Inserts a copy of x in the container if and only if there is
    //!   no element in the container with key equivalent to the key of x.
    //!   p is a hint pointing to where the insert should start to search.
@@ -868,7 +865,22 @@ class map
    //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
    //!   If an exception is thrown, there are no effects.
    //!
-   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
+   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if x
+   //!   is inserted right before p.
+   inline iterator insert(const_iterator p, const value_type& x)
+   { return this->base_t::insert_unique_hint_convertible(p, x); }
+
+   //! <b>Effects</b>: Moves x into the container if and only if there is
+   //!   no element in the container with key equivalent to the key of x.
+   //!   p is a hint pointing to where the insert should start to search.
+   //!
+   //! <b>Returns</b>: An iterator pointing to the element with key equivalent
+   //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
+   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if x
    //!   is inserted right before p.
    inline iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
    { return this->base_t::insert_unique_hint_convertible(p, boost::move(x)); }
