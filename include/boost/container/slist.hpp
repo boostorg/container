@@ -112,6 +112,9 @@ struct intrusive_slist_type
 //! operation than it did before), but the iterators themselves will not be invalidated
 //! or made to point to different elements unless that invalidation or mutation is explicit.
 //!
+//! swap(), and a move that transfers the nodes, keep the iterators, references and pointers
+//! to the elements valid: they refer to the same elements in the other slist.
+//!
 //! The main difference between slist and list is that list's iterators are bidirectional
 //! iterators, while slist's iterators are forward iterators. This means that slist is
 //! less versatile than list; frequently, however, bidirectional iterators are

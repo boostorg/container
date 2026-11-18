@@ -816,6 +816,11 @@ inline typename small_vector_allocator<T, VoidAlloc, Options>::pointer
 //! back to the in-place storage (see its documentation). Each move between the in-place storage and dynamically
 //! allocated storage invalidates all iterators, references and pointers to elements.
 //!
+//! swap(), the move constructor and move assignment transfer the elements, and the iterators, references
+//! and pointers to them, only if the elements are in dynamically allocated storage and that storage is
+//! transferred. Otherwise the elements are moved one by one, and the iterators, references and pointers
+//! to them are invalidated.
+//!
 //! \tparam T The type of object that is stored in the small_vector
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
 //! \tparam Allocator The allocator used for memory management when the number of elements exceeds N. Use void

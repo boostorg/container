@@ -57,6 +57,12 @@ namespace container {
 //! , and of an associative container. A set also provides most operations described in
 //! for unique keys.
 //!
+//! Iterator validity: an insertion invalidates no iterator, reference or pointer. An erasure
+//! invalidates only the iterators, references and pointers to the erased elements. extract()
+//! invalidates the iterators to the extracted element, but the references and pointers to it
+//! stay valid. swap(), and a move that transfers the nodes, keep the iterators, references and
+//! pointers to the elements valid: they refer to the same elements in the other container.
+//!
 //! \tparam Key is the type to be inserted in the set, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
 //! \tparam Allocator is the allocator to be used to allocate memory for this container.
@@ -1184,6 +1190,12 @@ namespace container {
 //! A multiset satisfies all of the requirements of a container and of a reversible
 //! container, and of an associative container). multiset also provides most operations
 //! described for duplicate keys.
+//!
+//! Iterator validity: an insertion invalidates no iterator, reference or pointer. An erasure
+//! invalidates only the iterators, references and pointers to the erased elements. extract()
+//! invalidates the iterators to the extracted element, but the references and pointers to it
+//! stay valid. swap(), and a move that transfers the nodes, keep the iterators, references and
+//! pointers to the elements valid: they refer to the same elements in the other container.
 //!
 //! \tparam Key is the type to be inserted in the set, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys

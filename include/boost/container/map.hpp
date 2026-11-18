@@ -62,6 +62,12 @@ namespace container {
 //! container and of an associative container. The <code>value_type</code> stored
 //! by this container is the value_type is std::pair<const Key, T>.
 //!
+//! Iterator validity: an insertion invalidates no iterator, reference or pointer. An erasure
+//! invalidates only the iterators, references and pointers to the erased elements. extract()
+//! invalidates the iterators to the extracted element, but the references and pointers to it
+//! stay valid. swap(), and a move that transfers the nodes, keep the iterators, references and
+//! pointers to the elements valid: they refer to the same elements in the other container.
+//!
 //! \tparam Key is the key_type of the map
 //! \tparam T is the <code>mapped_type</code>
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
@@ -1645,6 +1651,12 @@ namespace container {
 //! A multimap satisfies all of the requirements of a container and of a reversible
 //! container and of an associative container. The <code>value_type</code> stored
 //! by this container is the value_type is std::pair<const Key, T>.
+//!
+//! Iterator validity: an insertion invalidates no iterator, reference or pointer. An erasure
+//! invalidates only the iterators, references and pointers to the erased elements. extract()
+//! invalidates the iterators to the extracted element, but the references and pointers to it
+//! stay valid. swap(), and a move that transfers the nodes, keep the iterators, references and
+//! pointers to the elements valid: they refer to the same elements in the other container.
 //!
 //! \tparam Key is the key_type of the map
 //! \tparam Value is the <code>mapped_type</code>

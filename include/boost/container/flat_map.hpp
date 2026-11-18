@@ -152,6 +152,9 @@ inline typename Sequence::size_type flat_map_erase_if(Sequence &seq, Pred pred)
 //! previous iterators and references (unless that sequence container is <i>stable_vector</i> or a similar
 //! container that offers stable pointers and references). Similarly, erasing an element might invalidate
 //! iterators and references pointing to the erased element and to the elements that come after it.
+//! swap() and the moves follow the rules of the sequence container. For example, with vector they keep
+//! the iterators, references and pointers to the elements valid, and they refer to the same elements in
+//! the other container.
 //!
 //! This container provides random-access iterators.
 //!
@@ -2067,6 +2070,9 @@ namespace container {
 //! previous iterators and references (unless that sequence container is <i>stable_vector</i> or a similar
 //! container that offers stable pointers and references). Similarly, erasing an element might invalidate
 //! iterators and references pointing to the erased element and to the elements that come after it.
+//! swap() and the moves follow the rules of the sequence container. For example, with vector they keep
+//! the iterators, references and pointers to the elements valid, and they refer to the same elements in
+//! the other container.
 //!
 //! This container provides random-access iterators.
 //!

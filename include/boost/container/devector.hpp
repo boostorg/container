@@ -453,6 +453,9 @@ struct reserve_uninitialized_t {};
  * **Remark**: If a method invalidates some iterators, it also invalidates references
  * and pointers to the elements pointed by the invalidated iterators.
  *
+ * swap(), and a move that transfers the buffer, keep the iterators, references and pointers
+ * to the elements valid: they refer to the same elements in the other devector.
+ *
  *! \tparam Options A type produced from \c boost::container::devector_options.
  *
  * [SequenceContainer]: http://en.cppreference.com/w/cpp/concept/SequenceContainer

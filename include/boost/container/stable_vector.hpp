@@ -501,7 +501,9 @@ class stable_vector_iterator
 //! the container is stable, i.e. references and iterators to an element of a stable_vector
 //! remain valid as long as the element is not erased, and an iterator that has been
 //! assigned the return value of end() always remain valid until the destruction of
-//! the associated  stable_vector.
+//! the associated stable_vector. swap(), and a move that transfers the nodes, keep the
+//! iterators, references and pointers to the elements valid: they refer to the same elements
+//! in the other stable_vector. The past-the-end iterator stays with its stable_vector.
 //!
 //! Operation complexity: The big-O complexities of stable_vector operations match
 //! exactly those of std::vector. In general, insertion/deletion is constant time at
