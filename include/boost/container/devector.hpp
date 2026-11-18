@@ -1649,9 +1649,10 @@ class devector
    /**
     * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
     *
-    * **Effects**: Moves the elements to a new buffer of `size()` elements, with no free space
-    * at the front or at the back: `front_free_capacity() == 0 && back_free_capacity() == 0`.
-    * Invalidates iterators. `capacity()` can then be smaller than `size()` (see `capacity()`).
+    * **Effects**: If there is free space at the front or at the back, moves the elements to a new
+    * buffer of `size()` elements and invalidates iterators. Otherwise, there are no effects.
+    * After the call, `front_free_capacity() == 0 && back_free_capacity() == 0`.
+    * `capacity()` can then be smaller than `size()` (see `capacity()`).
     *
     * **Requires**: `T` shall be [MoveInsertable] into `*this`.
     *
@@ -1661,8 +1662,8 @@ class devector
     */
    inline void shrink_to_fit()
    {
-      if(this->front_capacity() || this->back_capacity())
-            this->reallocate_at(size(), 0);
+      if(this->front_free_capacity() || this->back_free_capacity())
+         this->reallocate_at(size(), 0);
    }
 
    // element access:

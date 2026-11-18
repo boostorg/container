@@ -1708,12 +1708,51 @@ void test_shrink_to_fit_never()
    BOOST_TEST(a.capacity() == 100u);
 }
 
+//shrink_to_fit() must not reallocate when there is no free space
+void test_shrink_to_fit_no_free_space()
+{
+   typedef devector<int> devector_t;
+   //Free space only at the back
+   {
+      devector_t d;
+      d.reserve_back(10u);
+      d.push_back(1);
+      d.push_back(2);
+      d.push_back(3);
+      devector_t::size_type allocs = d.get_alloc_count();
+      d.shrink_to_fit();
+      BOOST_TEST(d.get_alloc_count() == allocs + 1u);
+      BOOST_TEST(d.front_free_capacity() == 0u && d.back_free_capacity() == 0u);
+      allocs = d.get_alloc_count();
+      const int *const buf = d.data();
+      d.shrink_to_fit();
+      BOOST_TEST(d.get_alloc_count() == allocs);
+      BOOST_TEST(d.data() == buf);
+      BOOST_TEST(d.size() == 3u && d[0] == 1 && d[1] == 2 && d[2] == 3);
+   }
+   //Free space only at the front
+   {
+      devector_t d;
+      d.reserve_front(10u);
+      d.push_front(3);
+      d.push_front(2);
+      d.push_front(1);
+      BOOST_TEST(d.back_free_capacity() == 0u);
+      const devector_t::size_type allocs = d.get_alloc_count();
+      d.shrink_to_fit();
+      BOOST_TEST(d.get_alloc_count() == allocs + 1u);
+      BOOST_TEST(d.front_free_capacity() == 0u && d.back_free_capacity() == 0u);
+      BOOST_TEST(d.size() == 3u && d[0] == 1 && d[1] == 2 && d[2] == 3);
+   }
+}
+
 void shrink_to_fit()
 {
    typedef devector<unsigned> devector_u_shr;
    typedef devector<unsigned> small_devector_u_shr;
    test_shrink_to_fit_always<devector_u_shr>();
    test_shrink_to_fit_always<small_devector_u_shr>();
+   test_shrink_to_fit_no_free_space();
 }
 
 template <class Devector> void test_index_operator()
@@ -4104,6 +4143,5 @@ int main()
    }
 
    test_resize_uses_free_capacity();
-
    return boost::report_errors();
 }
