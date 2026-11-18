@@ -35,6 +35,16 @@ namespace container {
 //! push_back, pop_back, emplace_back, etc., but does not provide push_front,
 //! pop_front, or emplace_front.
 //!
+//! Iterator validity: segtor never moves the elements before an insertion or erasure point.
+//! An insertion invalidates the iterators, references and pointers at or after the insertion
+//! point, and the past-the-end iterator. If the new size() is greater than the capacity() before
+//! the insertion, the insertion also invalidates all other iterators, but no reference or pointer
+//! before the insertion point.
+//! An erasure invalidates the iterators, references and pointers at or after the first erased
+//! element, and the past-the-end iterator. reserve() can invalidate all iterators, but no reference
+//! or pointer. swap(), and a move that transfers the storage, keep the iterators, references and
+//! pointers to the elements valid: they refer to the same elements in the other segtor.
+//!
 //! \tparam T The type of object that is stored in the segtor
 //! \tparam Allocator The allocator used for all internal memory management. Use void
 //!   for the default allocator. An allocator whose \c value_type is \c void
@@ -340,7 +350,7 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //!
    //! <b>Complexity</b>: Linear to n.
    //!
-   //! <b>Note</b>: Non-standard extension.
+   //! <b>Note</b>: Non-standard extension. Can invalidate all iterators, but no reference or pointer.
    void reserve(size_type n)
    {
       this->reserve_back(n);

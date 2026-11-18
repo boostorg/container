@@ -863,6 +863,14 @@ struct get_vector_opt<void, AllocatorSizeType>
 //! and removal of elements at the beginning or in the middle. The number of
 //! elements in a vector may vary dynamically; memory management is automatic.
 //!
+//! Iterator validity: an operation that changes capacity() (for example reserve(), shrink_to_fit(),
+//! or an insertion when size() == capacity()) invalidates all iterators, references and pointers.
+//! An insertion that does not change capacity() invalidates the iterators, references and pointers
+//! at or after the insertion point, and the past-the-end iterator. An erasure invalidates the
+//! iterators, references and pointers at or after the first erased element, and the past-the-end
+//! iterator. swap(), and a move that transfers the buffer, keep the iterators, references and
+//! pointers to the elements valid: they refer to the same elements in the other vector.
+//!
 //! \tparam T The type of object that is stored in the vector
 //! \tparam A The allocator used for all internal memory management. Use void
 //!   for the default allocator. An allocator whose \c value_type is \c void
@@ -1767,6 +1775,8 @@ private:
    //!   n; otherwise, capacity() is unchanged. In either case, size() is unchanged.
    //!
    //! <b>Throws</b>: If memory allocation allocation throws or T's copy/move constructor throws.
+   //!
+   //! <b>Note</b>: If capacity() changes, all iterators, references and pointers are invalidated.
    inline void reserve(size_type new_cap)
    {
       if (this->capacity() < new_cap){
@@ -1780,6 +1790,8 @@ private:
    //! <b>Throws</b>: If memory allocation throws, or T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Linear to size().
+   //!
+   //! <b>Note</b>: If capacity() changes, all iterators, references and pointers are invalidated.
    inline void shrink_to_fit()
    {  this->priv_shrink_to_fit(alloc_version());   }
 
@@ -2036,7 +2048,8 @@ private:
    //! <b>Effects</b>: If capacity() is greater than size(), or the memory can be
    //!   expanded in place up to max_size(), inserts an object
    //!   of type T constructed with std::forward<Args>(args)... in the end of the vector.
-   //!   Otherwise, the vector is unchanged. Iterators are never invalidated.
+   //!   Otherwise, the vector is unchanged. No iterator, reference or pointer to an element is
+   //!   invalidated. If the object is inserted, the past-the-end iterator is invalidated.
    //!
    //! <b>Returns</b>: true if the object was inserted.
    //!
@@ -2067,7 +2080,8 @@ private:
    //!
    //! <b>Complexity</b>: Constant time.
    //!
-   //! <b>Note</b>: Non-standard extension.
+   //! <b>Note</b>: Non-standard extension. Never reallocates: only the past-the-end iterator
+   //!   is invalidated.
    template<class ...Args>
    BOOST_CONTAINER_FORCEINLINE reference unchecked_emplace_back(BOOST_FWD_REF(Args)...args)
    {
@@ -2183,6 +2197,8 @@ private:
    //! <b>Throws</b>: If T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Constant time.
+   //!
+   //! <b>Note</b>: Never reallocates: only the past-the-end iterator is invalidated.
    void unchecked_push_back(const T &x);
 
    //! <b>Requires</b>: Before the call to this function size() < capacity() must be true.
@@ -2194,6 +2210,8 @@ private:
    //! <b>Throws</b>: If T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Constant time.
+   //!
+   //! <b>Note</b>: Never reallocates: only the past-the-end iterator is invalidated.
    void unchecked_push_back(T &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)

@@ -39,6 +39,18 @@ namespace container {
 //! A double-ended queue is a sequence that supports random access to elements, constant time insertion
 //! and removal of elements at the end of the sequence, and linear time insertion and removal of elements in the middle.
 //!
+//! Iterator validity: an insertion at either end invalidates the past-the-end iterator, but no
+//! reference or pointer to an element. If the new size() is greater than the front_capacity()
+//! (insertion at the front) or the back_capacity() (insertion at the back) before the insertion,
+//! it also invalidates all other iterators. Otherwise no iterator to an element is invalidated.
+//! An insertion in the middle invalidates all iterators, references and pointers. An erasure of the
+//! first elements invalidates only the iterators, references and pointers to the erased elements.
+//! An erasure of the last elements invalidates those to the erased elements and the past-the-end
+//! iterator. An erasure in the middle invalidates all iterators, references and pointers.
+//! reserve_front() and reserve_back() can invalidate all iterators, but no reference or pointer.
+//! swap(), and a move that transfers the storage, keep the iterators, references and pointers to
+//! the elements valid: they refer to the same elements in the other deque.
+//!
 //! \tparam T The type of object that is stored in the deque
 //! \tparam A The allocator used for all internal memory management. Use void
 //!   for the default allocator. An allocator whose \c value_type is \c void
@@ -538,7 +550,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!
    //! <b>Complexity</b>: Linear to n.
    //!
-   //! <b>Note</b>: Non-standard extension.
+   //! <b>Note</b>: Non-standard extension. Can invalidate all iterators, but no reference or pointer.
    void reserve_back(size_type n);
 
    //! <b>Requires</b>: The container must be "reservable" (is_reservable == true)
@@ -552,7 +564,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!
    //! <b>Complexity</b>: Linear to n.
    //!
-   //! <b>Note</b>: Non-standard extension.
+   //! <b>Note</b>: Non-standard extension. Can invalidate all iterators, but no reference or pointer.
    void reserve_front(size_type n);
 
    //! <b>Effects</b>: Returns the largest possible size of the deque.
@@ -580,9 +592,12 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //! <b>Effects</b>: Tries to deallocate the excess of memory created
    //!   with previous allocations. The size of the deque is unchanged
    //!
-   //! <b>Throws</b>: If memory allocation throws.
+   //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer to an element is invalidated. If the deque is
+   //!   empty, the past-the-end iterator is invalidated.
    void shrink_to_fit();
 
    //////////////////////////////////////////////

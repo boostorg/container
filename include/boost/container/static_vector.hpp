@@ -164,6 +164,14 @@ struct get_static_vector_allocator
 //!elements in cases with complex object lifetime requirements that would otherwise not be trivially
 //!possible.
 //!
+//!@par Iterator validity
+//! The elements are never relocated. An insertion invalidates the iterators, references and pointers
+//! at or after the insertion point, and the past-the-end iterator. An erasure invalidates the
+//! iterators, references and pointers at or after the first erased element, and the past-the-end
+//! iterator. swap() and moves work element by element: the iterators, references and pointers stay
+//! with their static_vector and refer to the new values. The elements of the source of a move are
+//! not transferred.
+//!
 //!@par Error Handling
 //! If `throw_on_overflow` option is true (default behaviour), insertion beyond the capacity result
 //! in throwing bad_alloc() if exceptions are enabled and or calling throw_bad_alloc() if not enabled.
