@@ -1080,9 +1080,12 @@ class basic_string
    ~basic_string() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //! <b>Effects</b>: Copy constructs a string.
+   //! <b>Effects</b>: Makes *this a copy of x. If propagate_on_container_copy_assignment
+   //!   is true, the allocator of x is copied to *this.
    //!
    //! <b>Postcondition</b>: x == *this.
+   //!
+   //! <b>Throws</b>: If memory allocation throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
    basic_string& operator=(BOOST_COPY_ASSIGN_REF(basic_string) x)
@@ -1105,14 +1108,18 @@ class basic_string
       return *this;
    }
 
-   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
+   //! <b>Effects</b>: Move assignment. If allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get_allocator() == x.get_allocator(), x's resources are transferred to *this
+   //!   and x is empty. Otherwise, the characters of x are copied to *this, and x is in a valid
+   //!   but unspecified state.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and allocation throws
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    basic_string& operator=(BOOST_RV_REF(basic_string) x)
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
@@ -2203,11 +2210,11 @@ class basic_string
       return iterator(f);
    }
 
-   //! <b>Effects</b>: Erases all the elements of the vector.
+   //! <b>Effects</b>: Erases all the characters of the string. capacity() is unchanged.
    //!
    //! <b>Throws</b>: Nothing.
    //!
-   //! <b>Complexity</b>: Linear to the number of elements in the vector.
+   //! <b>Complexity</b>: Constant.
    void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {
        if(this->is_short()) {

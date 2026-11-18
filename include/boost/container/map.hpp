@@ -386,9 +386,10 @@ class map
    //!   copy constructor and swap of Compare do not throw. Otherwise, if allocation or
    //!   value_type's move constructor throws.
    //!
-   //! <b>Complexity</b>: Constant if x == x.get_allocator(), linear otherwise.
+   //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    //!
-   //! <b>Postcondition</b>: x is emptied.
+   //! <b>Postcondition</b>: If a == x.get_allocator(), x is emptied. Otherwise, x is in a valid
+   //!   but unspecified state.
    inline map(BOOST_RV_REF(map) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
                        dtl::is_nothrow_copy_constructible<Compare>::value &&
@@ -1978,7 +1979,8 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    //!
-   //! <b>Postcondition</b>: x is emptied.
+   //! <b>Postcondition</b>: If a == x.get_allocator(), x is emptied. Otherwise, x is in a valid
+   //!   but unspecified state.
    inline multimap(BOOST_RV_REF(multimap) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
                        dtl::is_nothrow_copy_constructible<Compare>::value &&

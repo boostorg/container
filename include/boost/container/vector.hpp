@@ -1351,15 +1351,15 @@ private:
 
    //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
    //!
-   //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
-   //!   before the function.
+   //! <b>Postcondition</b>: *this contains the elements x had before the function. If the
+   //!   buffer of x was transferred, x.empty(). Otherwise, x is in a valid but unspecified state.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
    //!   is false and (allocation throws or value_type's move constructor throws)
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
-   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    inline vector& operator=(BOOST_RV_REF(vector) x)
       #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
       //A partially propagable allocator (small_vector) can not pass the internal
@@ -1387,8 +1387,8 @@ private:
 
    //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
    //!
-   //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
-   //!   before the function.
+   //! <b>Postcondition</b>: *this contains the elements x had before the function, and x is
+   //!   in a valid but unspecified state.
    //!
    //! <b>Throws</b>: If move constructor/assignment of T throws or allocation throws
    //!
@@ -1409,8 +1409,7 @@ private:
 
    //! <b>Effects</b>: Copy assignment. All x's values are copied to *this.
    //!
-   //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
-   //!   before the function.
+   //! <b>Postcondition</b>: *this contains a copy of the elements of x.
    //!
    //! <b>Throws</b>: If move constructor/assignment of T throws or allocation throws
    //!

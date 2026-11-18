@@ -1063,7 +1063,8 @@ public:
    //!
    //! <b>Requires</b>: T is MoveInsertable when the allocators may be unequal.
    //!
-   //! <b>Postcondition</b>: x.empty() is true.
+   //! <b>Postcondition</b>: If the element blocks are moved, x.empty() is true. Otherwise, x is
+   //!   in a valid but unspecified state.
    //!
    //! <b>Throws</b>: Nothing if allocator_traits<allocator_type>::is_always_equal::value is true.
    //!   Otherwise, if allocation or T's move constructor throws.
@@ -1124,7 +1125,8 @@ public:
    //! <b>Requires</b>: T is MoveInsertable and MoveAssignable when elements are
    //!   moved one by one.
    //!
-   //! <b>Postcondition</b>: x.empty() is true.
+   //! <b>Postcondition</b>: If the element blocks are moved, x.empty() is true. Otherwise, x is
+   //!   in a valid but unspecified state.
    //!
    //! <b>Complexity</b>: Linear in size(), plus linear in x.size() when elements
    //!   are moved one by one.
