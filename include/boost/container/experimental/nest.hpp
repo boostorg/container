@@ -1631,9 +1631,7 @@ class nest
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
-   //! <b>Throws</b>: Nothing unless the element's constructor throws. If it does,
-   //!   the container is left in its original state (strong exception guarantee):
-   //!   any block speculatively allocated for the new element is freed.
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant (amortized).
@@ -1679,8 +1677,9 @@ class nest
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
-   //! <b>Throws</b>: Nothing unless the element's constructor throws.
-   //!   Basic exception guarantee.
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If the construction throws, the elements are unchanged, but a block allocated for
+   //!   the new element can stay as reserved capacity.
    //!
    //! <b>Complexity</b>: Constant (amortized).
    //! 
@@ -1922,6 +1921,9 @@ class nest
       return iterator(last.pbb, last.n);
    }
 
+   //! <b>Requires</b>: allocator_traits_type::propagate_on_container_swap::value is true or
+   //!   get_allocator() == x.get_allocator().
+   //!
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.
@@ -2107,9 +2109,13 @@ class nest
    void sort()
    { sort(std::less<T>()); }
 
+   //! <b>Requires</b>: p points to an element in *this.
+   //!
    //! <b>Effects</b>: Returns an iterator to the element pointed to by p.
    //!
-   //! <b>Complexity</b>: Linear.
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Linear in the number of blocks that contain elements.
    iterator get_iterator(const_pointer p)
    {
       std::less<const T*> less_cmp;
@@ -2136,9 +2142,13 @@ class nest
       #endif
    }
 
+   //! <b>Requires</b>: p points to an element in *this.
+   //!
    //! <b>Effects</b>: Returns a const_iterator to the element pointed to by p.
    //!
-   //! <b>Complexity</b>: Linear.
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Linear in the number of blocks that contain elements.
    const_iterator get_iterator(const_pointer p) const
    {
       return const_cast<nest*>(this)->get_iterator(p);
@@ -2958,7 +2968,9 @@ class nest
 //
 //////////////////////////////////////////////
 
-//! <b>Effects</b>: Swaps x and y.
+//! <b>Effects</b>: Equivalent to x.swap(y).
+//!
+//! <b>Complexity</b>: Constant.
 template<class T, class Allocator, class Options>
 inline void swap(nest<T, Allocator, Options>& x, nest<T, Allocator, Options>& y)
    BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
