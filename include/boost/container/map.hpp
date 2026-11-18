@@ -1215,6 +1215,9 @@ class map
    //! <b>Returns</b>: A node_type owning the element if found, otherwise an empty node_type.
    //!
    //! <b>Complexity</b>: log(size()).
+   //!
+   //! <b>Note</b>: Invalidates the iterators to the extracted element. The references and pointers
+   //!   to it stay valid: they refer to the element owned by the node handle.
    node_type extract(const key_type& k)
    {  return this->base_t::extract(k);  }
 
@@ -1226,6 +1229,9 @@ class map
    //! <b>Returns</b>: A node_type owning the element if found, otherwise an empty node_type.
    //!
    //! <b>Complexity</b>: log(size()).
+   //!
+   //! <b>Note</b>: Invalidates the iterators to the extracted element. The references and pointers
+   //!   to it stay valid: they refer to the element owned by the node handle.
    template<class K>
    inline BOOST_CONTAINER_DOC1ST
          (node_type
@@ -1242,6 +1248,9 @@ class map
    //! <b>Returns</b>: A node_type owning the element, otherwise an empty node_type.
    //!
    //! <b>Complexity</b>: Amortized constant.
+   //!
+   //! <b>Note</b>: Invalidates the iterators to the extracted element. The references and pointers
+   //!   to it stay valid: they refer to the element owned by the node handle.
    node_type extract(const_iterator position)
    {  return this->base_t::extract(position);  }
 
