@@ -880,22 +880,25 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //! <b>Complexity</b>: Constant time.
    void pop_back();
 
-   //! <b>Effects</b>: Erases the element at p.
+   //! <b>Effects</b>: Erases the element at pos.
+   //!
+   //! <b>Returns</b>: An iterator to the element after the erased element, or end() if the
+   //!   erased element was the last element.
    //!
    //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
-   //! <b>Complexity</b>: Linear to the elements between pos and the
-   //!   last element (if pos is near the end) or the first element
-   //!   if(pos is near the beginning).
-   //!   Constant if pos is the first or the last element.
+   //! <b>Complexity</b>: Linear to the number of elements between pos and the nearer end
+   //!   of the deque. Constant if pos is the first or the last element.
+   iterator erase(const_iterator pos);
+
    //! <b>Effects</b>: Erases the elements pointed by [first, last).
    //!
+   //! <b>Returns</b>: An iterator to the element that last pointed to before the erasure.
+   //!
    //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
-   //! <b>Complexity</b>: Linear to the distance between first and
-   //!   last plus the elements between pos and the
-   //!   last element (if pos is near the end) or the first element
-   //!   if(pos is near the beginning).
+   //! <b>Complexity</b>: Linear to the distance between first and last, plus the number of
+   //!   elements between the erased range and the nearer end of the deque.
    iterator erase(const_iterator first, const_iterator last);
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
