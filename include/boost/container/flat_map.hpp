@@ -1562,12 +1562,10 @@ class flat_map
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
-   //! <b>Returns</b>: Returns last.
+   //! <b>Returns</b>: An iterator to the element that last pointed to before the erasure.
    //!
-   //! <b>Complexity</b>: size()*N where N is the distance from first to last.
-   //!
-   //! <b>Complexity</b>: Logarithmic search time plus erasure time
-   //!   linear to the elements with bigger keys.
+   //! <b>Complexity</b>: Linear to the distance between first and last, plus the number
+   //!   of elements after last.
    inline iterator erase(const_iterator first, const_iterator last)
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,
@@ -2996,12 +2994,10 @@ class flat_multimap
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
-   //! <b>Returns</b>: Returns last.
+   //! <b>Returns</b>: An iterator to the element that last pointed to before the erasure.
    //!
-   //! <b>Complexity</b>: size()*N where N is the distance from first to last.
-   //!
-   //! <b>Complexity</b>: Logarithmic search time plus erasure time
-   //!   linear to the elements with bigger keys.
+   //! <b>Complexity</b>: Linear to the distance between first and last, plus the number
+   //!   of elements after last.
    inline iterator erase(const_iterator first, const_iterator last)
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,

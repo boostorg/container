@@ -857,12 +857,10 @@ class flat_set
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
-   //! <b>Returns</b>: Returns last.
+   //! <b>Returns</b>: An iterator to the element that last pointed to before the erasure.
    //!
-   //! <b>Complexity</b>: size()*N where N is the distance from first to last.
-   //!
-   //! <b>Complexity</b>: Logarithmic search time plus erasure time
-   //!   linear to the elements with bigger keys.
+   //! <b>Complexity</b>: Linear to the distance between first and last, plus the number
+   //!   of elements after last.
    iterator erase(const_iterator first, const_iterator last);
 
    //! <b>Requires</b>: This overload is available only if
