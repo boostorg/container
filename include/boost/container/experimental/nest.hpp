@@ -1086,6 +1086,15 @@ struct get_nest_opt<nest_opt<B, P> >
 //! and bitmask-based slot management. It provides stable iterators and
 //! efficient insertion and erasure operations in constant time.
 //!
+//! Iterator validity: the container chooses the insertion position, and it does not move
+//! elements when it inserts or erases. References, pointers and iterators to an element stay
+//! valid until the element is erased, and the past-the-end iterator stays valid until the nest
+//! is destroyed. The exceptions are shrink_to_fit() and sort(), which can invalidate all
+//! iterators, references and pointers to elements, and a move with unequal allocators (see the
+//! notes of each function). swap(), splice(), and a move that transfers the blocks, keep the
+//! iterators, references and pointers to the elements valid: they refer to the same elements in
+//! the other nest.
+//!
 //! \tparam T The type of object stored in the nest
 //! \tparam Allocator The allocator used for all internal memory management. Use void
 //!   for the default allocator. An allocator whose \c value_type is \c void
@@ -1332,6 +1341,10 @@ class nest
    //!   Otherwise, if allocation or value_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
+   //!
+   //! <b>Note</b>: If a == x.get_allocator(), iterators, references and pointers to the elements
+   //!   of x stay valid and refer to the elements of *this. Otherwise each element is moved, and
+   //!   iterators, references and pointers to the elements of x are invalidated.
    nest(BOOST_RV_REF(nest) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& a)
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       : allocator_base(block_allocator(a))
@@ -1412,6 +1425,11 @@ class nest
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
    //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
+   //!
+   //! <b>Note</b>: If the elements are transferred (propagate_on_container_move_assignment is true
+   //!   or the allocators compare equal), iterators, references and pointers to the elements of x
+   //!   stay valid and refer to the elements of *this. Otherwise each element is moved, and
+   //!   iterators, references and pointers to the elements of x are invalidated.
    nest& operator=(BOOST_RV_REF(nest) x)
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
@@ -1561,6 +1579,9 @@ class nest
    //! <b>Effects</b>: Compacts elements and removes unused blocks.
    //!
    //! <b>Complexity</b>: Linear.
+   //!
+   //! <b>Note</b>: Can move elements: invalidates all iterators, references and pointers to
+   //!   elements. The past-the-end iterator stays valid.
    void shrink_to_fit()
    {
       priv_compact_noop_track();
@@ -1570,11 +1591,15 @@ class nest
    //! <b>Effects</b>: Releases all reserved (empty) blocks.
    //!
    //! <b>Complexity</b>: Linear on the number of reserved (empty) blocks.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    void trim_capacity() BOOST_NOEXCEPT { trim_capacity(0); }
 
    //! <b>Effects</b>: Releases reserved blocks until capacity() <= n.
    //!
    //! <b>Complexity</b>: Linear on the number of reserved (empty) blocks released.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    void trim_capacity(size_type n) BOOST_NOEXCEPT
    {
       if(capacity() <= n) return;
@@ -1911,9 +1936,12 @@ class nest
       priv_swap_impl(x, dtl::bool_<pocs_val>());
    }
 
-   //! <b>Effects</b>: Erases all elements.
+   //! <b>Effects</b>: Erases all elements. capacity() is unchanged.
    //!
    //! <b>Complexity</b>: Linear.
+   //!
+   //! <b>Note</b>: Invalidates all iterators, references and pointers to elements. The
+   //!   past-the-end iterator stays valid.
    void clear() BOOST_NOEXCEPT
    {
       block_base_pointer const hdr = blist.header();
@@ -1992,6 +2020,9 @@ class nest
    //! <b>Requires</b>: get_allocator() == x.get_allocator().
    //!
    //! <b>Complexity</b>: Linear in x.size().
+   //!
+   //! <b>Note</b>: Iterators, references and pointers to the elements of x stay valid and refer
+   //!   to the elements of *this. The past-the-end iterators of both containers stay valid.
    void splice(nest& x)
    {
       BOOST_ASSERT(this != &x);
@@ -2054,6 +2085,9 @@ class nest
    //! <b>Effects</b>: Sorts elements according to comp.
    //!
    //! <b>Complexity</b>: O(n log n).
+   //!
+   //! <b>Note</b>: Can move elements between slots: invalidates all iterators, references and
+   //!   pointers to elements. The past-the-end iterator stays valid.
    template<class Compare>
    void sort(Compare comp)
    {
@@ -2067,6 +2101,9 @@ class nest
    //! <b>Effects</b>: Sorts elements in ascending order.
    //!
    //! <b>Complexity</b>: O(n log n).
+   //!
+   //! <b>Note</b>: Can move elements between slots: invalidates all iterators, references and
+   //!   pointers to elements. The past-the-end iterator stays valid.
    void sort()
    { sort(std::less<T>()); }
 
