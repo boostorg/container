@@ -30,7 +30,7 @@
 #include <boost/container/detail/iterator.hpp>
 // intrusive
 #include <boost/intrusive/detail/slist_node.hpp>
-#include <boost/intrusive/linear_slist_algorithms.hpp>
+#include <boost/intrusive/cached_linear_slist_algorithms.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/detail/twin.hpp>
 // move
@@ -55,7 +55,7 @@ class basic_multiallocation_chain
 {
    private:
    typedef bi::slist_node_traits<VoidPointer>               node_traits;
-   typedef bi::linear_slist_algorithms<node_traits>         algo;
+   typedef bi::cached_linear_slist_algorithms<node_traits>  algo;
    typedef typename node_traits::node                       node;
    typedef typename node_traits::node_ptr                   node_ptr;
    typedef typename boost::intrusive::
@@ -122,17 +122,14 @@ class basic_multiallocation_chain
 
    void init()
    {
-      algo::init_header(this->root_ptr());
-      last_ = this->root_ptr();
+      algo::init_header(this->root_ptr(), last_);
       size_ = 0u;
    }
 
    //Links [b, before_e], already linked between them, after after_this
    void priv_link_after(const node_ptr &after_this, const node_ptr &b, const node_ptr &before_e, size_type n)
    {
-      algo::incorporate_after(after_this, b, before_e);
-      if(after_this == last_)
-         last_ = before_e;
+      algo::incorporate_after(after_this, b, before_e, last_);
       size_ += n;
    }
 
@@ -144,7 +141,6 @@ class basic_multiallocation_chain
    {
       this->init();
       if(n){
-         node_traits::set_next(to_node_ptr(before_e), node_ptr());
          this->priv_link_after(this->root_ptr(), to_node_ptr(b), to_node_ptr(before_e), n);
       }
    }
@@ -186,9 +182,7 @@ class basic_multiallocation_chain
    iterator insert_after(iterator it, void_pointer m)
    {
       const node_ptr n = to_node_ptr(m);
-      algo::link_after(it.m_p, n);
-      if(it.m_p == last_)
-         last_ = n;
+      algo::link_after(it.m_p, n, last_);
       ++size_;
       return iterator(n);
    }
@@ -204,9 +198,7 @@ class basic_multiallocation_chain
       BOOST_ASSERT(!this->empty());
       const node_ptr root = this->root_ptr();
       const node_ptr f = node_traits::get_next(root);
-      algo::unlink_after(root);
-      if(last_ == f)
-         last_ = root;
+      algo::unlink_after(root, last_);
       --size_;
       return from_node_ptr(f);
    }
@@ -216,15 +208,9 @@ class basic_multiallocation_chain
    {
       if(!n)
          return;
-      const node_ptr bb = before_b.m_p;
-      const node_ptr be = before_e.m_p;
-      const node_ptr p  = after_this.m_p;
-      if(x.last_ == be)
-         x.last_ = bb;
+      //If &x == this, last_ and x.last_ are the same object, which is supported
+      algo::transfer_after(after_this.m_p, before_b.m_p, before_e.m_p, last_, x.last_);
       x.size_ -= n;
-      algo::transfer_after(p, bb, be);
-      if(p == last_)
-         last_ = be;
       size_ += n;
    }
 
@@ -234,10 +220,7 @@ class basic_multiallocation_chain
    //Unlinks the n blocks (before_b, e)
    void erase_after(iterator before_b, iterator e, size_type n)
    {
-      const node_ptr bb = before_b.m_p;
-      algo::unlink_after(bb, e.m_p);
-      if(!e.m_p)
-         last_ = bb;
+      algo::unlink_after(before_b.m_p, e.m_p, last_);
       size_ -= n;
    }
 
@@ -268,17 +251,8 @@ class basic_multiallocation_chain
 
    void swap(basic_multiallocation_chain &x)
    {
-      const bool this_empty = this->empty();
-      const bool x_empty    = x.empty();
-      const node_ptr this_last = last_;
-      const node_ptr x_last    = x.last_;
-      const node_ptr this_first = node_traits::get_next(this->root_ptr());
-      node_traits::set_next(this->root_ptr(), node_traits::get_next(x.root_ptr()));
-      node_traits::set_next(x.root_ptr(), this_first);
+      algo::swap_trailing_nodes(this->root_ptr(), x.root_ptr(), last_, x.last_);
       boost::adl_move_swap(size_, x.size_);
-      //An empty chain's last node is its own header
-      last_   = x_empty    ? this->root_ptr() : x_last;
-      x.last_ = this_empty ? x.root_ptr()     : this_last;
    }
 
    static iterator iterator_to(const void_pointer &p)
