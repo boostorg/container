@@ -1253,6 +1253,8 @@ class stable_vector
    //!   n; otherwise, capacity() is unchanged. In either case, size() is unchanged.
    //!
    //! <b>Throws</b>: If memory allocation allocation throws.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    void reserve(size_type n)
    {
       BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT;
@@ -1284,6 +1286,8 @@ class stable_vector
    //! <b>Throws</b>: If memory allocation throws.
    //!
    //! <b>Complexity</b>: Linear to size().
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    void shrink_to_fit()
    {
       if(this->capacity()){
@@ -1519,6 +1523,8 @@ class stable_vector
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    template<class ...Args>
    reference emplace_back(Args &&...args)
    {
@@ -1538,6 +1544,8 @@ class stable_vector
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    template<class ...Args>
    iterator emplace(const_iterator p, Args && ...args)
    {
@@ -1589,6 +1597,8 @@ class stable_vector
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    void push_back(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the end of the stable_vector
@@ -1598,6 +1608,8 @@ class stable_vector
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    void push_back(T &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)
@@ -1615,6 +1627,8 @@ class stable_vector
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    iterator insert(const_iterator p, const T &x);
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
@@ -1628,6 +1642,8 @@ class stable_vector
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    iterator insert(const_iterator p, T &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, T, iterator, priv_insert, const_iterator, const_iterator)
@@ -1643,6 +1659,8 @@ class stable_vector
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to n.
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    iterator insert(const_iterator p, size_type n, const T& t)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
@@ -1663,6 +1681,8 @@ class stable_vector
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    inline iterator insert(const_iterator p, std::initializer_list<value_type> il)
    {
       //Position checks done by insert()
@@ -1682,6 +1702,8 @@ class stable_vector
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [first, last).
+   //!
+   //! <b>Note</b>: No iterator, reference or pointer is invalidated.
    template <class InputIterator>
    iterator insert(const_iterator p, InputIterator first, InputIterator last
          #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

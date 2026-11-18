@@ -1342,6 +1342,9 @@ public:
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant. Exactly one object of type T is constructed.
+   //!
+   //! <b>Note</b>: No reference, pointer or iterator (including the past-the-end
+   //!   iterator) is invalidated.
    template<typename... Args>
    BOOST_CONTAINER_FORCEINLINE iterator emplace(Args&&... args)
    {
@@ -1372,6 +1375,9 @@ public:
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: No reference, pointer or iterator (including the past-the-end
+   //!   iterator) is invalidated.
    template<typename... Args>
    BOOST_CONTAINER_FORCEINLINE iterator emplace_hint(const_iterator, Args&&... args)
    {
@@ -1388,6 +1394,9 @@ public:
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: No reference, pointer or iterator (including the past-the-end
+   //!   iterator) is invalidated.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const T& x) { return emplace(x); }
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator, const T& x)
    {  return emplace(x);  }
@@ -1399,6 +1408,9 @@ public:
    //!   insert(il.begin(), il.end()).
    //!
    //! <b>Complexity</b>: Linear in il.size().
+   //!
+   //! <b>Note</b>: No reference, pointer or iterator (including the past-the-end
+   //!   iterator) is invalidated.
    void insert(std::initializer_list<T> il) { insert(il.begin(), il.end()); }
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
@@ -1410,6 +1422,9 @@ public:
    //!
    //! <b>Complexity</b>: Linear in the number of elements inserted; one object of
    //!   type T is constructed per element.
+   //!
+   //! <b>Note</b>: No reference, pointer or iterator (including the past-the-end
+   //!   iterator) is invalidated.
    template< BOOST_CONTAINER_DOC1ST(std::ranges::input_range<T>, hub_detail::container_compatible_range<T>) R >
    void insert_range(R&& rg)
    {
@@ -1427,6 +1442,9 @@ public:
    //!
    //! <b>Complexity</b>: Linear in the number of elements inserted; one object of
    //!   type T is constructed per element.
+   //!
+   //! <b>Note</b>: No reference, pointer or iterator (including the past-the-end
+   //!   iterator) is invalidated.
    template<
       typename InputIterator
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>)
@@ -1444,6 +1462,9 @@ public:
    //!
    //! <b>Complexity</b>: Linear in n; one object of type T is constructed per
    //!   element.
+   //!
+   //! <b>Note</b>: No reference, pointer or iterator (including the past-the-end
+   //!   iterator) is invalidated.
    void insert(size_type n, const T& x)
    {
       range_insert_impl(size_type(0), n, [&, this] (T* p, size_type) {
@@ -1541,6 +1562,9 @@ public:
    //! <b>Effects</b>: Erases all elements. Reserved blocks are kept.
    //!
    //! <b>Complexity</b>: Linear in size().
+   //!
+   //! <b>Note</b>: Invalidates all references, pointers and iterators to elements. The
+   //!   past-the-end iterator stays valid.
    void clear() noexcept { erase(begin(), end()); }
 
    //! <b>Effects</b>: Inserts the contents of x into *this, leaving x empty.
