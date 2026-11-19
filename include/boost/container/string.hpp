@@ -3430,10 +3430,11 @@ class basic_string
       this->priv_construct_null(addr + difference_type(n));
    }
 
-   //nvc++ (NVIDIA HPC SDK, at least up to 26.5) miscompiles the loop below when
-   //it is inlined at -O2/-fast. See:
+   //nvc++ (NVIDIA HPC SDK) before 26.9 miscompiles the loop below when it is
+   //inlined at -O2/-fast (TPR #38907, fixed in 26.9). See:
    //https://forums.developer.nvidia.com/t/nvc-26-5-o2-miscompilation-wrong-final-value-for-a-loop-counter-when-a-copy-loop-is-inlined/381529
-   #if defined(__NVCOMPILER)
+   #if defined(__NVCOMPILER) && \
+       ((__NVCOMPILER_MAJOR__ < 26) || (__NVCOMPILER_MAJOR__ == 26 && __NVCOMPILER_MINOR__ < 9))
    template<class InpIt, class FwdIt> BOOST_NOINLINE
    #else
    template<class InpIt, class FwdIt> inline
