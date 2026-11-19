@@ -359,14 +359,13 @@ class set
    //!                 Constructs *this using x's resources.
    //!
    //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true and the
-   //!   copy constructor and swap of Compare do not throw. Otherwise, if allocation or
+   //!   copy constructor of Compare does not throw. Otherwise, if allocation or
    //!   value_type's move constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    inline set(BOOST_RV_REF(set) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
-                       dtl::is_nothrow_copy_constructible<Compare>::value &&
-                       dtl::is_nothrow_swappable<Compare>::value)
+                       dtl::is_nothrow_copy_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
@@ -1412,8 +1411,7 @@ class multiset
    //! @copydoc ::boost::container::set::set(set &&, const allocator_type &)
    inline multiset(BOOST_RV_REF(multiset) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
-                       dtl::is_nothrow_copy_constructible<Compare>::value &&
-                       dtl::is_nothrow_swappable<Compare>::value)
+                       dtl::is_nothrow_copy_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 

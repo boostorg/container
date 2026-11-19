@@ -63,6 +63,26 @@ class tagged_less
    int tag_;
 };
 
+//A less-than comparator that counts its copy assignments (moves are copies),
+//so a test can check that an operation does not assign the comparator.
+template<class T>
+class copy_assign_counting_less
+{
+   public:
+   copy_assign_counting_less() {}
+   copy_assign_counting_less(const copy_assign_counting_less &) {}
+   copy_assign_counting_less &operator=(const copy_assign_counting_less &)
+   {  ++copy_assignments; return *this;  }
+
+   bool operator()(const T &l, const T &r) const
+   {  return l < r;  }
+
+   static int copy_assignments;
+};
+
+template<class T>
+int copy_assign_counting_less<T>::copy_assignments = 0;
+
 }  //namespace test {
 }  //namespace container {
 }  //namespace boost {

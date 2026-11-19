@@ -708,12 +708,12 @@ class tree
 
    tree(BOOST_RV_REF(tree) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
-                       dtl::is_nothrow_copy_constructible<key_compare>::value &&
-                       dtl::is_nothrow_copy_assignable<key_compare>::value)
+                       dtl::is_nothrow_copy_constructible<key_compare>::value)
       :  AllocHolder(x.key_comp(), a)
    {
       if(this->node_alloc() == x.node_alloc()){
-         this->icont().move_assign_unlink(x.icont());
+         //The comparator is already copied: only take the nodes
+         this->icont().transfer_from(x.icont());
       }
       else{
          this->icont().clone_from

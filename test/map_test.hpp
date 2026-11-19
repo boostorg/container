@@ -2132,6 +2132,17 @@ bool test_comparator_operations_for()
       #endif
    }
    #endif
+   {
+      //The allocator-extended move constructor copy-constructs the comparator
+      typedef copy_assign_counting_less<int> compare_t;
+      typedef typename rebind_map_compare<MapType, compare_t>::type C;
+      C src;
+      src.insert(typename C::value_type(1, 1));
+      compare_t::copy_assignments = 0;
+      C c(boost::move(src), src.get_allocator());
+      if(c.size() != 1u || compare_t::copy_assignments != 0)
+         return false;
+   }
    #if !defined(BOOST_NO_CXX11_NOEXCEPT)
    {
       using boost::move_detail::declval;
