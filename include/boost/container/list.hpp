@@ -255,11 +255,11 @@ class list
       : AllocHolder(a)
    {  this->insert(this->cbegin(), x.begin(), x.end());   }
 
-   //! <b>Effects</b>: Move constructor sing the specified allocator.
+   //! <b>Effects</b>: Move constructor using the specified allocator.
    //!                 Moves x's resources to *this.
    //!
    //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
-   //!   Otherwise, if allocation or value_type's copy constructor throws.
+   //!   Otherwise, if allocation or value_type's move constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    list(BOOST_RV_REF(list) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
@@ -267,7 +267,7 @@ class list
       : AllocHolder(a)
    {
       if(this->node_alloc() == x.node_alloc()){
-         this->icont().swap(x.icont());
+         this->icont().splice(this->icont().end(), x.icont());
       }
       else{
          this->insert(this->cbegin(), boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));

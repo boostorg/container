@@ -441,9 +441,18 @@ int list_test (bool copied_allocators_equal = true)
    {  //List(List &&, alloc)
       ::boost::movelib::unique_ptr<MyStdList> const stdlistp = ::boost::movelib::make_unique<MyStdList>(100u);
       ::boost::movelib::unique_ptr<MyBoostList> const boostlistp = ::boost::movelib::make_unique<MyBoostList>(100u);
+      const IntType *const pfront = &boostlistp->front();
+      const bool equal_alloc = boostlistp->get_allocator() == typename MyBoostList::allocator_type();
       ::boost::movelib::unique_ptr<MyBoostList> const boostlistp2 = ::boost::movelib::make_unique<MyBoostList>
          (::boost::move(*boostlistp), typename MyBoostList::allocator_type());
       if(!test::CheckEqualContainers(*boostlistp2, *stdlistp)) return 1;
+      //equal allocators: nodes are taken, source is empty
+      if(equal_alloc && (!boostlistp->empty() || &boostlistp2->front() != pfront)) return 1;
+      //Both containers stay usable
+      boostlistp->clear();
+      boostlistp->push_front(IntType(1));
+      boostlistp2->push_front(IntType(2));
+      if(boostlistp->size() != 1u || boostlistp2->size() != 101u) return 1;
    }
    {  //List operator=(List &&)
       ::boost::movelib::unique_ptr<MyStdList> const stdlistp = ::boost::movelib::make_unique<MyStdList>(100u);
