@@ -622,6 +622,12 @@ differences are:
   with a slightly trimmed interface. Choose [classref boost::container::slist slist] when an O(1) `size()` or the
   size-aware merge is convenient, and `std::forward_list` when the minimal per-list overhead matters most.
 
+[*ABI breaking change]: [classref boost::container::slist slist] is a linear list: the last node points to null, so
+move construction, move assignment and `swap` take constant time. Before Boost 1.94 the list was circular (the last node
+pointed to the header), and these operations took linear time. The two representations are not compatible in memory.
+To use a `slist` that a previous version placed in shared memory or in a mapped file, define the deprecated
+macro `BOOST_CONTAINER_CIRCULAR_SLIST` before including any Boost.Container header, in every translation unit.
+
 The following example illustrates the most common operations, in particular the constant-time `_after` family
 (`insert_after`/`erase_after`), the use of `before_begin()` and the size-aware `splice_after`:
 
@@ -2955,6 +2961,18 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 [section:release_notes Release Notes]
 
+[section:release_notes_boost_1_94_00 Boost 1.94 Release]
+
+* [classref boost::container::slist slist] is now a linear list: the last node points to null instead of the header.
+  Move construction, move assignment, swap and the allocator-extended move constructor with equal allocators
+  now take constant time instead of linear time. `before_begin()` is no longer equal to `end()`, and `previous(begin())`
+  returns `before_begin()`. [*Breaking change]: the representation in memory changes, so a `slist`
+  placed in shared memory or in a mapped file by a previous Boost version can not be used by this version, and the reverse.
+  Define `BOOST_CONTAINER_CIRCULAR_SLIST` to get the previous circular representation. This macro is deprecated
+  and a compilation message is shown when it is used (`BOOST_DISABLE_PRAGMA_MESSAGE` hides it).
+
+[endsect]
+
 [section:release_notes_boost_1_93_00 Boost 1.93 Release]
 
 * Containers now accept allocators whose \c value_type is \c void; such allocators
@@ -2984,7 +3002,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
   [classref boost::container::basic_string basic_string], [classref boost::container::hub hub].
   [classref boost::container::map map],
   [classref boost::container::multimap multimap], [classref boost::container::set set] and
-  [classref boost::container::multiset multiset] also need a comparator with a non-throwing copy constructor and swap.
+  [classref boost::container::multiset multiset] also need a comparator with a non-throwing copy constructor.
 
 * [classref boost::container::devector devector]: the [classref boost::container::relocate_never relocate_never]
   option, documented in previous releases, is now implemented. The elements are never relocated inside the buffer:

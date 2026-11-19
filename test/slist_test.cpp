@@ -202,7 +202,7 @@ bool test_previous()
    ++i;
    if(c.previous(i) != c.begin())
       return false;
-   if(c.previous(c.begin()) != c.end())
+   if(c.previous(c.begin()) != c.before_begin())
       return false;
    if(*c.previous(c.end()) != 3)
       return false;

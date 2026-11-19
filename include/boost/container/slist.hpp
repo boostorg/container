@@ -53,6 +53,15 @@
 #include <initializer_list>
 #endif
 
+//BOOST_CONTAINER_CIRCULAR_SLIST selects the circular representation of previous
+//versions, for binary compatibility with lists that a previous version placed in
+//shared memory or in a mapped file. It is deprecated.
+#if defined(BOOST_CONTAINER_CIRCULAR_SLIST)
+#include <boost/config/pragma_message.hpp>
+BOOST_PRAGMA_MESSAGE("BOOST_CONTAINER_CIRCULAR_SLIST is deprecated and will be removed in a future release: "
+                     "it gives linear-time move and swap to boost::container::slist")
+#endif
+
 namespace boost {
 namespace container {
 
@@ -87,9 +96,18 @@ struct intrusive_slist_type
             void_pointer;
    typedef base_node<value_type, slist_hook<void_pointer> > node_type;
 
+   //A linear list (the last node points to null) gives constant-time move and swap.
+   //A circular list must find its last node to point it to the new header.
+   #if defined(BOOST_CONTAINER_CIRCULAR_SLIST)
+   static const bool is_linear = false;
+   #else
+   static const bool is_linear = true;
+   #endif
+
    typedef typename dtl::bi::make_slist
       <node_type
       ,dtl::bi::base_hook<typename slist_hook<void_pointer>::type>
+      ,dtl::bi::linear<is_linear>
       ,dtl::bi::constant_time_size<true>
       , dtl::bi::size_type
          <typename allocator_traits_type::size_type>
@@ -507,7 +525,7 @@ class slist
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
       iterator before_begin() BOOST_NOEXCEPT_OR_NOTHROW
-   {  return iterator(end());  }
+   {  return iterator(this->icont().before_begin());  }
 
    //! <b>Effects</b>: Returns a non-dereferenceable const_iterator
    //! that, when incremented, yields begin().  This iterator may be used
@@ -565,7 +583,7 @@ class slist
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
       const_iterator cbefore_begin() const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return const_iterator(end());  }
+   {  return const_iterator(this->non_const_icont().before_begin());  }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the list.
    //!
@@ -585,26 +603,24 @@ class slist
       const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(this->non_const_icont().end());   }
 
-   //! <b>Returns</b>: The iterator to the element before i in the sequence.
-   //!   Returns the end-iterator, if either i is the begin-iterator or the
-   //!   sequence is empty.
+   //! <b>Returns</b>: The iterator to the element before p in the sequence.
+   //!   Returns before_begin() if p is begin().
    //!
    //! <b>Throws</b>: Nothing.
    //!
-   //! <b>Complexity</b>: Linear to the number of elements before i.
+   //! <b>Complexity</b>: Linear to the number of elements before p.
    //!
    //! <b>Note</b>: Non-standard extension.
    BOOST_CONTAINER_NODISCARD inline
       iterator previous(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(this->icont().previous(p.get())); }
 
-   //! <b>Returns</b>: The const_iterator to the element before i in the sequence.
-   //!   Returns the end-const_iterator, if either i is the begin-const_iterator or
-   //!   the sequence is empty.
+   //! <b>Returns</b>: The const_iterator to the element before p in the sequence.
+   //!   Returns cbefore_begin() if p is begin().
    //!
    //! <b>Throws</b>: Nothing.
    //!
-   //! <b>Complexity</b>: Linear to the number of elements before i.
+   //! <b>Complexity</b>: Linear to the number of elements before p.
    //!
    //! <b>Note</b>: Non-standard extension.
    BOOST_CONTAINER_NODISCARD inline
@@ -982,7 +998,7 @@ class slist
    //!
    //! <b>Throws</b>: Nothing.
    //!
-   //! <b>Complexity</b>: Linear to the number of elements on *this and x.
+   //! <b>Complexity</b>: Constant.
    void swap(slist& x)
       BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
                                 || allocator_traits_type::is_always_equal::value)
