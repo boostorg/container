@@ -58,6 +58,8 @@ doxygen autodoc
                                    \"BOOST_CONTAINER_SCOPEDALLOC_ALLINNERCLASS=typename... InnerAllocs\"\\
                                    \"BOOST_CONTAINER_CONSTANT_VAR=static constexpr \"\\
                                    \"BOOST_CONTAINER_FORCEINLINE=inline\" \\
+                                   \"BOOST_CONTAINER_MALLOC_LIKE=\" \\
+                                   \"BOOST_CONTAINER_ALLOC_ALIGN(IDX)=\" \\
                                    \"BOOST_CONTAINER_STATIC_ASSERT(x)=\" \\
                                    "
         <xsl:param>"boost.doxygen.reftitle=Boost.Container Header Reference"

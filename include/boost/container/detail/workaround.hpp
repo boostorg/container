@@ -374,6 +374,34 @@ namespace boost {
 #  pragma GCC diagnostic pop
 #endif
 
+//Marks a function that returns a new block pointer that does not alias any
+//pointer that is valid when the function returns, optimizing cached values.
+//Never use it on a function that can return a block that is already in use
+//(reallocation, expansion in place, allocation_command).
+#if defined(__has_attribute)
+#  if __has_attribute(malloc)
+#     define BOOST_CONTAINER_MALLOC_LIKE __attribute__((malloc))
+#  endif
+#endif
+#if !defined(BOOST_CONTAINER_MALLOC_LIKE) && defined(_MSC_VER)
+#  define BOOST_CONTAINER_MALLOC_LIKE __declspec(restrict)
+#endif
+#ifndef BOOST_CONTAINER_MALLOC_LIKE
+#  define BOOST_CONTAINER_MALLOC_LIKE
+#endif
+
+//Tells the compiler that the returned pointer is aligned to the value of
+//parameter IDX (1-based; in a non-static member function 'this' is 1).
+//The value must be a non-zero power of two: anything else is undefined.
+#if defined(__has_attribute)
+#  if __has_attribute(alloc_align)
+#     define BOOST_CONTAINER_ALLOC_ALIGN(IDX) __attribute__((alloc_align(IDX)))
+#  endif
+#endif
+#ifndef BOOST_CONTAINER_ALLOC_ALIGN
+#  define BOOST_CONTAINER_ALLOC_ALIGN(IDX)
+#endif
+
 //Software prefetch hint for a raw pointer 'p' (no fancy-pointer support).
 //Implemented as a macro rather than a function because of
 //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985

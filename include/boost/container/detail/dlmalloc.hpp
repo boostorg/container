@@ -726,7 +726,7 @@ class basic_dlmalloc
    //!   hand, logarithmic in the number of distinct free sizes when the heap
    //!   has to search for one, and one call to the system when it has to
    //!   grow.
-   void *allocate(size_type bytes) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void *allocate(size_type bytes) BOOST_NOEXCEPT
    {  return this->priv_allocate(bytes);  }
 
    //! <b>Requires</b>: `mem` must be null, or a block this heap returned
@@ -757,7 +757,7 @@ class basic_dlmalloc
    //! <b>Complexity</b>: That of allocate(), plus linear in the size of the
    //!   block to zero it. Memory fresh from the system reads as zero
    //!   already and is not written again.
-   void *allocate_zeroed(size_type n_elements, size_type elem_size) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void *allocate_zeroed(size_type n_elements, size_type elem_size) BOOST_NOEXCEPT
    {  return this->priv_allocate_zeroed(n_elements, elem_size);  }
 
    //! <b>Requires</b>: `mem` must be null, or a block this heap returned
@@ -816,6 +816,7 @@ class basic_dlmalloc
    //!   left over.
    //!
    //! <b>Note</b>: deallocate() takes such a block back like any other.
+   BOOST_CONTAINER_MALLOC_LIKE BOOST_CONTAINER_ALLOC_ALIGN(2)  //implicit "this" is first arg
    void *allocate_aligned(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {  return this->priv_allocate_aligned(alignment, bytes);  }
 
@@ -4045,7 +4046,7 @@ class basic_dlmalloc
    //follows it. This function once took the lock for each of the two, and
    //needed a repair path to give the block back when the second acquisition
    //failed - which is the leak that path repaired.
-   void* internal_memalign(size_type alignment, size_type bytes) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void* internal_memalign(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       if (!ok_magic(m)) {
@@ -4302,7 +4303,7 @@ class basic_dlmalloc
    //Takes the lock, then runs priv_allocate_nolock(), which holds the whole
    //implementation. The magic is read before the lock: a heap that fails that
    //test must not be locked.
-   void* priv_allocate(size_type bytes) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void* priv_allocate(size_type bytes) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
@@ -4343,7 +4344,7 @@ class basic_dlmalloc
 
 
    // ==== priv_allocate_zeroed ====
-   void* priv_allocate_zeroed(size_type n_elements, size_type elem_size) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void* priv_allocate_zeroed(size_type n_elements, size_type elem_size) BOOST_NOEXCEPT
    {
       void* mem;
       size_type req = 0;
@@ -4441,7 +4442,7 @@ class basic_dlmalloc
 
 
    // ==== priv_allocate_aligned ====
-   void* priv_allocate_aligned(size_type alignment, size_type bytes) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void* priv_allocate_aligned(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
@@ -4588,7 +4589,7 @@ class basic_dlmalloc
    //dead "if (!0)" below is where its preaction() sits - kept in place, and
    //with it the indentation and the postaction label, so that the two stay
    //easy to read against the original mspace_malloc().
-   void* priv_allocate_nolock(size_type bytes) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void* priv_allocate_nolock(size_type bytes) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
@@ -4710,7 +4711,7 @@ class basic_dlmalloc
    //section covers the allocation and the realign that trims it. That is what
    //makes the operation atomic to another thread, and what leaves nothing for
    //a leak-repair path to repair.
-   void* priv_allocate_aligned_nolock(size_type alignment, size_type bytes) BOOST_NOEXCEPT
+   BOOST_CONTAINER_MALLOC_LIKE void* priv_allocate_aligned_nolock(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void* mem = 0;
