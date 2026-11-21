@@ -53,8 +53,7 @@ void test_alignment_and_size()
    }
 }
 
-//An alignment below MALLOC_ALIGNMENT is raised to it, and one that is not a
-//power of two is rounded up to the next one
+//An alignment below MALLOC_ALIGNMENT is raised to it
 void test_degenerate_alignments()
 {
    dlmalloc h;

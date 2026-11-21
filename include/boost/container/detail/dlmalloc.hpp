@@ -798,7 +798,7 @@ class basic_dlmalloc
    void *reallocate_in_place(void *mem, size_type newsize) BOOST_NOEXCEPT
    {  return this->priv_reallocate_in_place(mem, newsize);  }
 
-   //! <b>Requires</b>: `alignment` must be a power of two.
+   //! <b>Requires</b>: `alignment` must be a power of two (zero is not one).
    //!
    //! <b>Effects</b>: Takes a block of at least `bytes` usable bytes whose
    //!   address is a multiple of `alignment`. An `alignment` below the
@@ -4716,11 +4716,8 @@ class basic_dlmalloc
       void* mem = 0;
       if (alignment <  min_chunk_size) // must be at least a minimum chunk size
          alignment = min_chunk_size;
-      if ((alignment & (alignment-size_t_one)) != 0) {// Ensure a power of 2
-         size_type a = malloc_alignment << 1;
-         while (a < alignment) a <<= 1;
-         alignment = a;
-      }
+      if ((alignment & (alignment-size_t_one)) != 0)  // not a power of 2
+         return 0;
       if (bytes >= max_request - alignment) {
          if (m != 0)  { // Test isn't needed but avoids compiler warning
             malloc_failure();
