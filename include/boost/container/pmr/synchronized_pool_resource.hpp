@@ -19,7 +19,7 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/detail/pool_resource.hpp>
-#include <boost/container/detail/thread_mutex.hpp>
+#include <boost/container/detail/spin_mutex.hpp>
 
 #include <cstddef>
 
@@ -60,8 +60,12 @@ namespace pmr {
 class synchronized_pool_resource
    : public memory_resource
 {
-   //Mutable: the const observers read pool state that other threads change
-   mutable dtl::thread_mutex m_mut;
+   //Mutable: the const observers read pool state that other threads change.
+   //The lock of the process heap: an OS mutex costs a library call and, on
+   //Windows, two locked instructions per operation. The critical section is
+   //short (a pool operation), and spin_mutex backs off by yielding and then
+   //sleeping when it is contended.
+   mutable dtl::spin_mutex m_mut;
    pool_resource     m_pool_resource;
 
    public:
@@ -140,18 +144,18 @@ class synchronized_pool_resource
 
 namespace sync_pr_dtl {
 
-class thread_mutex_lock
+class mutex_lock
 {
-   dtl::thread_mutex &m_mut;
+   dtl::spin_mutex &m_mut;
 
    public:
-   explicit thread_mutex_lock(dtl::thread_mutex &m)
+   explicit mutex_lock(dtl::spin_mutex &m)
       : m_mut(m)
    {
       m_mut.lock();
    }
 
-   ~thread_mutex_lock()
+   ~mutex_lock()
    {
       m_mut.unlock();
    }
@@ -180,7 +184,7 @@ inline synchronized_pool_resource::~synchronized_pool_resource() //virtual
 
 inline void synchronized_pool_resource::release()
 {
-   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    m_pool_resource.release();
 }
 
@@ -192,13 +196,13 @@ inline pool_options synchronized_pool_resource::options() const
 
 inline void* synchronized_pool_resource::do_allocate(std::size_t bytes, std::size_t alignment) //virtual
 {
-   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    return m_pool_resource.do_allocate(bytes, alignment);
 }
 
 inline void synchronized_pool_resource::do_deallocate(void* p, std::size_t bytes, std::size_t alignment) //virtual
 {
-   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    return m_pool_resource.do_deallocate(p, bytes, alignment);
 }
 
@@ -207,19 +211,19 @@ inline bool synchronized_pool_resource::do_is_equal(const memory_resource& other
 
 inline std::size_t synchronized_pool_resource::pool_count() const
 {
-   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    return m_pool_resource.pool_count();
 }
 
 inline std::size_t synchronized_pool_resource::pool_index(std::size_t bytes) const
 {
-   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    return m_pool_resource.pool_index(bytes);
 }
 
 inline std::size_t synchronized_pool_resource::pool_next_blocks_per_chunk(std::size_t pool_idx) const
 {
-   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    return m_pool_resource.pool_next_blocks_per_chunk(pool_idx);
 }
 
@@ -228,7 +232,7 @@ inline std::size_t synchronized_pool_resource::pool_block(std::size_t pool_idx) 
 
 inline std::size_t synchronized_pool_resource::pool_cached_blocks(std::size_t pool_idx) const
 {
-   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    return m_pool_resource.pool_cached_blocks(pool_idx);
 }
 

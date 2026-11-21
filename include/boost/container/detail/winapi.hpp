@@ -49,8 +49,6 @@ struct _FILETIME;
 #if !defined(__CYGWIN__)
 struct _MEMORY_BASIC_INFORMATION;
 struct _SYSTEM_INFO;
-struct _RTL_CRITICAL_SECTION;
-struct _RTL_CRITICAL_SECTION_DEBUG;
 #endif
 
 namespace boost {
@@ -126,9 +124,9 @@ static const dword_type mem_reserve_c    = 0x2000;     //MEM_RESERVE
 static const dword_type mem_release_c    = 0x8000;     //MEM_RELEASE
 static const dword_type mem_top_down_c   = 0x100000;   //MEM_TOP_DOWN
 
-//Layout-compatible with MEMORY_BASIC_INFORMATION, SYSTEM_INFO and
-//CRITICAL_SECTION, so the real definitions are never needed. The functions
-//take pointers to them through a cast.
+//Layout-compatible with MEMORY_BASIC_INFORMATION and SYSTEM_INFO, so the
+//real definitions are never needed. The functions take pointers to them
+//through a cast.
 struct memory_basic_information
 {
    void          *BaseAddress;
@@ -157,20 +155,9 @@ struct system_info
    unsigned short wProcessorRevision;
 };
 
-struct critical_section
-{
-   ::_RTL_CRITICAL_SECTION_DEBUG *DebugInfo;
-   long           LockCount;
-   long           RecursionCount;
-   void          *OwningThread;
-   void          *LockSemaphore;
-   uintptr_type   SpinCount;
-};
-
 #if defined(BOOST_USE_WINDOWS_H)
 BOOST_CONTAINER_STATIC_ASSERT(sizeof(memory_basic_information) == sizeof(::MEMORY_BASIC_INFORMATION));
 BOOST_CONTAINER_STATIC_ASSERT(sizeof(system_info) == sizeof(::SYSTEM_INFO));
-BOOST_CONTAINER_STATIC_ASSERT(sizeof(critical_section) == sizeof(::CRITICAL_SECTION));
 #endif
 
 #endif   //!defined(__CYGWIN__)
@@ -261,27 +248,6 @@ __declspec(dllimport) boost::container::winapi::bool_type __stdcall
 
 __declspec(dllimport) void __stdcall
    Sleep(boost::container::winapi::dword_type dwMilliseconds);
-
-//Windows only: thread_mutex. InitializeCriticalSectionEx is the only one
-//of the two that UWP has.
-
-__declspec(dllimport) boost::container::winapi::bool_type __stdcall
-   InitializeCriticalSectionEx
-      ( ::_RTL_CRITICAL_SECTION *lpCriticalSection
-      , boost::container::winapi::dword_type dwSpinCount
-      , boost::container::winapi::dword_type Flags);
-
-__declspec(dllimport) void __stdcall
-   InitializeCriticalSection(::_RTL_CRITICAL_SECTION *lpCriticalSection);
-
-__declspec(dllimport) void __stdcall
-   EnterCriticalSection(::_RTL_CRITICAL_SECTION *lpCriticalSection);
-
-__declspec(dllimport) void __stdcall
-   LeaveCriticalSection(::_RTL_CRITICAL_SECTION *lpCriticalSection);
-
-__declspec(dllimport) void __stdcall
-   DeleteCriticalSection(::_RTL_CRITICAL_SECTION *lpCriticalSection);
 
 #endif   //!defined(__CYGWIN__)
 
