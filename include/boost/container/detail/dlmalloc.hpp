@@ -2585,7 +2585,7 @@ class basic_dlmalloc
    // Check if p has its pinuse bit on
    template<class Chunk>
       BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p, dtl::true_) BOOST_NOEXCEPT
-      {  return (pinuse(p));  }
+      {  return pinuse(p) != 0;  }
    template<class Chunk>
       BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p, dtl::false_) BOOST_NOEXCEPT
       {  (void)p;  return ((1));  }
