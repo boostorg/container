@@ -2127,7 +2127,7 @@ bool test_comparator_operations_for()
       compare_t::throw_on_copy = false;
       if(thrown || a.key_comp().tag_ != 2 || b.key_comp().tag_ != 1 || !a.empty() || b.size() != 1u)
          return false;
-      #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+      #if defined(BOOST_MOVE_TT_CXX11_IS_NOTHROW_SWAPPABLE)
       BOOST_CONTAINER_STATIC_ASSERT(( noexcept(a.swap(b)) ));
       #endif
    }

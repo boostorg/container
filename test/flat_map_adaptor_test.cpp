@@ -64,8 +64,10 @@ void test_swap_noexcept()
    typedef flat_map<int, int, std::less<int>, static_vector<std::pair<int, int>, 8> > static_t;
    BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<plain_t&>().swap(declval<plain_t&>())) ));
    BOOST_CONTAINER_STATIC_ASSERT((  is_nothrow_swappable<plain_t>::value ));
+   #if defined(BOOST_MOVE_TT_CXX11_IS_NOTHROW_SWAPPABLE)
    BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<static_t&>().swap(declval<static_t&>())) ));
    BOOST_CONTAINER_STATIC_ASSERT(( !is_nothrow_swappable<static_t>::value ));
+   #endif
    #endif
 }
 
