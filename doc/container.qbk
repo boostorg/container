@@ -2963,13 +2963,23 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 [section:release_notes_boost_1_94_00 Boost 1.94 Release]
 
-* [classref boost::container::slist slist] is now a linear list: the last node points to null instead of the header.
+* [*ABI Breaking]: [classref boost::container::slist slist] is now a linear list: the last node points to null instead of the header.
   Move construction, move assignment, swap and the allocator-extended move constructor with equal allocators
   now take constant time instead of linear time. `before_begin()` is no longer equal to `end()`, and `previous(begin())`
   returns `before_begin()`. [*Breaking change]: the representation in memory changes, so a `slist`
   placed in shared memory or in a mapped file by a previous Boost version can not be used by this version, and the reverse.
   Define `BOOST_CONTAINER_CIRCULAR_SLIST` to get the previous circular representation. This macro is deprecated
   and a compilation message is shown when it is used (`BOOST_DISABLE_PRAGMA_MESSAGE` hides it).
+
+* [*Source Breaking]: the node handle insertion with a hint of [classref boost::container::map map] and
+  [classref boost::container::set set], `insert(const_iterator hint, node_type&& nh)`, now returns `iterator`
+  instead of `insert_return_type`. If the insertion fails, `nh` keeps the node, and the returned iterator
+  points to the element with an equivalent key. Before, the node moved to the `node` member of the
+  returned `insert_return_type` and `nh` was empty. `insert(node_type&& nh)` without a hint still returns
+  `insert_return_type`. The change follows the interface of the standard associative containers, which
+  the previous versions did not implement correctly by mistake.
+  Define `BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE` to get the previous behaviour. This macro
+  is deprecated and a compilation message is shown when it is used (`BOOST_DISABLE_PRAGMA_MESSAGE` hides it).
 
 [endsect]
 

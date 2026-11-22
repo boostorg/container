@@ -951,15 +951,28 @@ class map
    insert_return_type insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_unique_node(boost::move(nh));  }
 
-   //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
-   //!   to the position just prior to "hint".
+   //! <b>Requires</b>: nh is empty or this->get_allocator() == nh.get_allocator().
+   //!
+   //! <b>Effects</b>: If nh is empty, has no effect. Otherwise, inserts the element owned
+   //!   by nh if and only if there is no element in the container with a key equivalent to nh.key().
+   //!   The element is inserted as close as possible to the position just prior to "hint".
+   //!
+   //! <b>Returns</b>: end() if nh is empty, an iterator to the inserted element if the insertion
+   //!   took place, or an iterator to the element with a key equivalent to nh.key() if it failed.
+   //!
+   //! <b>Postcondition</b>: nh is empty if the insertion took place. Otherwise nh is unchanged.
    //!
    //! <b>Throws</b>: If the comparison throws.
    //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
    //!   right before "hint".
-   insert_return_type insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   #if defined(BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE) && !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   insert_return_type
+   #else
+   iterator
+   #endif
+      insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_unique_node(hint, boost::move(nh));  }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

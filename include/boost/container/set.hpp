@@ -753,7 +753,13 @@ class set
    //!
    //! <b>Throws</b>: If the comparison throws.
    //!   If an exception is thrown, there are no effects.
-   inline insert_return_type insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   inline
+   #if defined(BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE) && !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+      insert_return_type
+   #else
+      iterator
+   #endif
+      insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_unique_node(hint, boost::move(nh));  }
 
    //! @copydoc ::boost::container::map::merge(map<Key, T, C2, Allocator, Options>&)

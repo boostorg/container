@@ -126,9 +126,15 @@ bool node_type_test()
       r = dst.insert(src.extract(src.find(mv_1))); // Iterator version, successful
       if(! (r.position == dst.find(mv_1) && r.inserted == true && r.node.empty()) )
          return false;
-      r = dst.insert(dst.begin(), src.extract(mv_2)); // Key type version, successful
+      #if defined(BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE)
+      r = dst.insert(dst.begin(), src.extract(mv_2)); // Hint version, successful
       if(! (r.position == dst.find(mv_2) && r.inserted == true && r.node.empty()) )
          return false;
+      #else
+      map_type::iterator it = dst.insert(dst.begin(), src.extract(mv_2)); // Hint version, successful
+      if(! (it == dst.find(mv_2)) )
+         return false;
+      #endif
       r = dst.insert(src.extract(mv_3)); // Key type version, unsuccessful
 
       if(!src.empty())
@@ -467,6 +473,59 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_i
    < boost::container::multimap<int, int> >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
+//The hint version returns an iterator and, if the insertion fails, nh keeps the node.
+//With BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE it returns
+//insert_return_type and, if the insertion fails, the node moves to its node member.
+bool test_node_type_hint_insert()
+{
+   typedef boost::container::map<int, int> map_type;
+   map_type dst, src;
+   dst.emplace(1, 10);
+   dst.emplace(2, 20);
+   src.emplace(2, 99);
+   src.emplace(3, 30);
+
+   #if defined(BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE)
+   map_type::insert_return_type r = dst.insert(dst.begin(), map_type::node_type());
+   if(r.position != dst.end() || r.inserted || !r.node.empty() || dst.size() != 2)
+      return false;
+
+   r = dst.insert(dst.end(), src.extract(3));
+   if(r.position != dst.find(3) || !r.inserted || !r.node.empty() || dst.size() != 3)
+      return false;
+
+   r = dst.insert(dst.end(), src.extract(2));
+   if(r.position != dst.find(2) || r.inserted || r.position->second != 20 || dst.size() != 3)
+      return false;
+   if(r.node.empty() || r.node.key() != 2 || r.node.mapped() != 99)
+      return false;
+   return true;
+   #else
+   map_type::node_type empty_nh;
+   map_type::iterator it = dst.insert(dst.begin(), boost::move(empty_nh));
+   if(it != dst.end() || dst.size() != 2)
+      return false;
+
+   map_type::node_type nh = src.extract(3);
+   it = dst.insert(dst.end(), boost::move(nh));
+   if(it != dst.find(3) || it->second != 30 || dst.size() != 3)
+      return false;
+   if(!nh.empty())
+      return false;
+
+   nh = src.extract(2);
+   it = dst.insert(dst.end(), boost::move(nh));
+   if(it != dst.find(2) || it->second != 20 || dst.size() != 3)
+      return false;
+   #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+   //Without rvalue references nh is passed by value, so it is always moved
+   if(nh.empty() || nh.key() != 2 || nh.mapped() != 99)
+      return false;
+   #endif
+   return true;
+   #endif
+}
+
 int main ()
 {
    if(!test_unqualified_swap())
@@ -746,6 +805,9 @@ int main ()
    }
 
    if(!test_range_of_convertible_pairs())
+      return 1;
+
+   if(!test_node_type_hint_insert())
       return 1;
 
    return 0;

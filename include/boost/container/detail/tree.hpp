@@ -58,6 +58,16 @@
 
 #include <boost/container/detail/std_fwd.hpp>
 
+//BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE selects the behaviour of
+//previous versions for insert(hint, node_type&&) of map and set: it returns
+//insert_return_type and, if the insertion fails, the node moves to its node member.
+//It is deprecated.
+#if defined(BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE)
+#include <boost/config/pragma_message.hpp>
+BOOST_PRAGMA_MESSAGE("BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE is deprecated and will be removed "
+                     "in a future release: insert(hint, node_type&&) of map and set should return iterator")
+#endif
+
 namespace boost {
 namespace container {
 namespace dtl {
@@ -1379,32 +1389,48 @@ class tree
    }
 
    insert_return_type insert_unique_node(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      return this->insert_unique_node(this->end(), boost::move(nh));
-   }
+   {  return this->priv_insert_unique_node_irt(this->end(), nh);  }
 
+   #if defined(BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE)
+   //Deprecated behaviour: if the insertion fails, the node moves to the node member
    insert_return_type insert_unique_node(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {  return this->priv_insert_unique_node_irt(hint, nh);  }
+   #else
+   //If the insertion fails, nh keeps the node
+   iterator insert_unique_node(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {  return this->priv_insert_unique_node(hint, nh);  }
+   #endif
+
+   private:
+   //If the insertion fails, the node moves to the node member of the result
+   insert_return_type priv_insert_unique_node_irt(const_iterator hint, node_type &nh)
    {
       insert_return_type irt; //inserted == false, node.empty()
-      if(!nh.empty()){
-         insert_commit_data data;
-         std::pair<iterator,bool> ret =
-            this->insert_unique_check(hint, key_of_value_t()(nh.get()->get_data()), data);
-         if(ret.second){
-            irt.inserted = true;
-            irt.position = iterator(this->icont().insert_unique_commit(*nh.get(), data));
-            nh.release();
-         }
-         else{
-            irt.position = ret.first;
-            irt.node = boost::move(nh);
-         }
-      }
-      else{
-         irt.position = this->end();
-      }
+      const bool was_empty = nh.empty();
+      irt.position = this->priv_insert_unique_node(hint, nh);
+      irt.inserted = !was_empty && nh.empty();
+      irt.node = boost::move(nh);
       return BOOST_MOVE_RET(insert_return_type, irt);
    }
+
+   //Returns end() if nh is empty, the inserted element, or the element with an
+   //equivalent key (nh keeps the node)
+   iterator priv_insert_unique_node(const_iterator hint, node_type &nh)
+   {
+      if(nh.empty()){
+         return this->end();
+      }
+      insert_commit_data data;
+      std::pair<iterator,bool> ret =
+         this->insert_unique_check(hint, key_of_value_t()(nh.get()->get_data()), data);
+      if(ret.second){
+         ret.first = iterator(this->icont().insert_unique_commit(*nh.get(), data));
+         nh.release();
+      }
+      return ret.first;
+   }
+
+   public:
 
    iterator insert_equal_node(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {
