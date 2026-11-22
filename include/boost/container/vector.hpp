@@ -1278,7 +1278,13 @@ private:
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    vector(BOOST_RV_REF(vector) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+      //A partially propagable allocator (small_vector) can not always pass the
+      //internal buffer, so the elements can be copied
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value && !allocator_traits_type::is_partially_propagable::value)
+      #else
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
+      #endif
       :  m_holder( vector_uninitialized_size, a
                  //In this allocator move constructor the allocator won't be propagated --v
                  , alloc_holder_t::template is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()

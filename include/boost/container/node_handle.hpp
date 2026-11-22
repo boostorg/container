@@ -322,13 +322,18 @@ class node_handle
       return !this->m_ptr;
    }
 
-   //! <b>Requires</b>: this->empty(), or nh.empty(), or nator_traits::propagate_on_container_swap is true, or
-   //!   node_alloc() == nh.node_alloc().
+   //! <b>Requires</b>: this->empty(), or nh.empty(), or allocator_traits<allocator_type>::propagate_on_container_swap
+   //!   is true, or node_alloc() == nh.node_alloc().
    //!
-   //! <b>Effects</b>: Calls swap(m_ptr, nh.m_ptr). If this->empty(), or nh.empty(), or nator_traits::propagate_on_-
-   //!   container_swap is true calls swap(node_alloc(), nh.node_alloc()).
+   //! <b>Effects</b>: Calls swap(m_ptr, nh.m_ptr). If this->empty(), or nh.empty(), or
+   //!   allocator_traits<allocator_type>::propagate_on_container_swap is true calls swap(node_alloc(), nh.node_alloc()).
+   //!
+   //! <b>Throws</b>: Nothing if allocator_traits<allocator_type>::propagate_on_container_swap or
+   //!   allocator_traits<allocator_type>::is_always_equal is true.
    void swap(node_handle &nh)
-      BOOST_NOEXCEPT_IF(nator_traits::propagate_on_container_swap::value || nator_traits::is_always_equal::value)
+      //The node allocator is a rebind of allocator_type, so it has the same propagation traits
+      BOOST_NOEXCEPT_IF( allocator_traits<allocator_type>::propagate_on_container_swap::value
+                      || allocator_traits<allocator_type>::is_always_equal::value)
    {
       BOOST_ASSERT(this->empty() || nh.empty() || nator_traits::propagate_on_container_swap::value
                    || nator_traits::equal(node_alloc(), nh.node_alloc()));
