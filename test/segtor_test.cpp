@@ -42,72 +42,13 @@
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include "iterator_noexcept_utils.hpp"
+#include "segmented_test.hpp"
 #include "container_noexcept_utils.hpp"
 
 #include "lightweight_test.hpp"
 #include "unqualified_swap_test.hpp"
 
 using namespace boost::container;
-
-//Function to check if both sets are equal
-// segtor does not provide front operations; only back/middle tests
-template<class V1, class V2>
-bool segtor_copyable_only(V1 &, V2 &, dtl::false_type)
-{
-   return true;
-}
-
-template<class V1, class V2>
-bool segtor_copyable_only(V1 &cntc, V2 &stdc, dtl::true_type)
-{
-   typedef typename V1::value_type IntType;
-   std::size_t size = cntc.size();
-   stdc.insert(stdc.end(), 50u, 1);
-   cntc.insert(cntc.end(), 50u, IntType(1));
-   if(!test::CheckEqualContainers(cntc, stdc)) return false;
-   {
-      IntType move_me(1);
-      stdc.insert(stdc.begin()+std::ptrdiff_t(size)/2, 50u, 1);
-      cntc.insert(cntc.begin()+std::ptrdiff_t(size/2), 50u, boost::move(move_me));
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-   }
-   {
-      IntType move_me(2);
-      cntc.assign(cntc.size()/2, boost::move(move_me));
-      stdc.assign(stdc.size()/2, 2);
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-   }
-   {
-      IntType move_me(1);
-      stdc.clear();
-      cntc.clear();
-      stdc.insert(stdc.begin(), 50u, 1);
-      cntc.insert(cntc.begin(), 50u, boost::move(move_me));
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-      stdc.insert(stdc.begin()+20, 50u, 1);
-      cntc.insert(cntc.begin()+20, 50u, boost::move(move_me));
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-      stdc.insert(stdc.begin()+20, 20u, 1);
-      cntc.insert(cntc.begin()+20, 20u, boost::move(move_me));
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-   }
-   {
-      IntType move_me(1);
-      stdc.clear();
-      cntc.clear();
-      stdc.insert(stdc.end(), 50u, 1);
-      cntc.insert(cntc.end(), 50u, boost::move(move_me));
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-      stdc.insert(stdc.end()-20, 50u, 1);
-      cntc.insert(cntc.end()-20, 50u, boost::move(move_me));
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-      stdc.insert(stdc.end()-20, 20u, 1);
-      cntc.insert(cntc.end()-20, 20u, boost::move(move_me));
-      if(!test::CheckEqualContainers(cntc, stdc)) return false;
-   }
-
-   return true;
-}
 
 //Test recursive structures
 class recursive_segtor
@@ -280,7 +221,7 @@ bool do_test()
          if(!test::CheckEqualContainers(cntc, stdc)) return false;
       }
 
-      if(!segtor_copyable_only(cntc, stdc
+      if(!test::segmented_copyable_only(cntc, stdc
                      ,dtl::bool_<boost::container::test::is_copyable<IntType>::value>())){
          return false;
       }
@@ -346,78 +287,6 @@ bool test_ctad()  //Older clang versions suffer from ICE here
 #else
 { return true;  }
 #endif
-
-template<class VoidAllocator, bool Reservable>
-struct GetAllocatorCont
-{
-   template<class ValueType>
-   struct apply
-   {
-      typedef segtor< ValueType
-                    , typename allocator_traits<VoidAllocator>
-                        ::template portable_rebind_alloc<ValueType>::type
-                    , typename segtor_options<reservable<Reservable> >::type
-                    > type;
-   };
-};
-
-template<class VoidAllocator, bool Reservable>
-int test_cont_variants()
-{
-   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<int>::type MyCont;
-   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::movable_int>::type MyMoveCont;
-   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::movable_and_copyable_int>::type MyCopyMoveCont;
-   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::copyable_int>::type MyCopyCont;
-   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::moveconstruct_int>::type MyMoveConstructCont;
-
-   if (test::vector_test<MyCont>())
-      return 1;
-   if (test::vector_test<MyMoveCont>())
-      return 1;
-   if (test::vector_test<MyCopyMoveCont>())
-      return 1;
-   if (test::vector_test<MyCopyCont>())
-      return 1;
-   if (test::vector_test<MyMoveConstructCont>())
-      return 1;
-   return 0;
-}
-
-template<std::size_t N>
-struct char_holder
-{
-   char chars[N];
-};
-
-bool do_test_default_block_size()
-{
-   //Check power of two sizes by default
-   BOOST_TEST(segtor<char_holder<8>  >::get_block_size() == 16*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<12> >::get_block_size() == 16*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<16> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<20> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<24> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<28> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<32> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<36> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<40> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<44> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<48> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<52> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<56> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<60> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<64> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<68> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<72> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<76> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<80> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<84> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<88> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segtor<char_holder<92> >::get_block_size() == 2*sizeof(void*));
-   //Minimal 8 elements
-   BOOST_TEST(segtor<char_holder<148> >::get_block_size() == 8u);
-   return 0 == boost::report_errors();
-}
 
 struct boost_container_segtor;
 
@@ -506,7 +375,7 @@ int main ()
       return 1;
 
    //Default block size
-   if(!do_test_default_block_size())
+   if(!test::test_segmented_default_block_size<segtor>())
       return 1;
 
    if (!test_ctad())
@@ -535,13 +404,13 @@ int main ()
    //    Allocator implementations
    ////////////////////////////////////
    //       std:allocator
-   if(test_cont_variants< std::allocator<void>, false >()){
+   if(test::test_segmented_cont_variants< segtor, std::allocator<void>, false >()){
       std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
       return 1;
    }
 
    //       boost::container::allocator
-   if(test_cont_variants< allocator<void>, true >()){
+   if(test::test_segmented_cont_variants< segtor, allocator<void>, true >()){
       std::cerr << "test_cont_variants< allocator<void> > failed" << std::endl;
       return 1;
    }
@@ -618,6 +487,9 @@ int main ()
    }
 
    if(!test_reserve_capacity())
+      return 1;
+
+   if(!test::test_segmented_shrink_to_fit<segtor, false>())
       return 1;
 
    return 0;

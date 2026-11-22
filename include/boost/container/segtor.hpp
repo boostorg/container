@@ -809,13 +809,17 @@ class segtor : public deque_impl<T, Allocator, true, Options>
 
    //! <b>Effects</b>: Tries to deallocate the excess of memory created
    //!   with previous allocations. The size of the segtor is unchanged.
+   //!   If the segtor is empty, all the memory is deallocated. Otherwise the internal
+   //!   index of memory blocks is reallocated to hold only the blocks that contain
+   //!   elements, and if the segtor is reservable the blocks without elements are deallocated
+   //!   The elements are not moved..
    //!
    //! <b>Throws</b>: Nothing.
    //!
-   //! <b>Complexity</b>: Constant.
+   //! <b>Complexity</b>: Linear to the number of memory blocks.
    //!
-   //! <b>Note</b>: No iterator, reference or pointer to an element is invalidated. If the segtor
-   //!   is empty, the past-the-end iterator is invalidated.
+   //! <b>Note</b>: References and pointers to elements are not invalidated. If the memory is
+   //!   reallocated or deallocated, all iterators are invalidated.
    void shrink_to_fit() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Swaps the contents of *this and x.

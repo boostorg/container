@@ -1028,6 +1028,13 @@ class deque_base
          this->prot_deallocate_node(p);
    }
 
+   void prot_deallocate_nodes_if_reservable(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      (void)nstart; (void)nfinish;
+      BOOST_IF_CONSTEXPR(is_reservable)
+         this->prot_deallocate_nodes(nstart, nfinish);
+   }
+
    void prot_deallocate_all_nodes()
    {
       BOOST_IF_CONSTEXPR(is_reservable)
@@ -1047,6 +1054,45 @@ class deque_base
          this->members_.set_start_off(0u);
          this->members_.m_finish_off = 0u;
       }
+   }
+
+   void prot_shrink_map_to_fit() BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_ASSERT(!!this->members_.m_map);
+      const ptr_alloc_ptr old_map      = this->members_.m_map;
+      const size_type     old_map_size = this->members_.m_map_size;
+      const ptr_alloc_ptr start_node   = this->prot_start_node();
+      const ptr_alloc_ptr end_node     = this->prot_finish_node() + 1;
+      const size_type     new_map_size = size_type(end_node - start_node);
+      if (new_map_size == old_map_size)
+         return;
+
+      //Reallocates the map of a non-empty deque so that it holds only active nodes
+      //If reservable, nodes are deallocated
+
+      ptr_alloc_ptr new_map = ptr_alloc_ptr();
+      bool allocated = false;
+      BOOST_CONTAINER_TRY{
+         new_map = this->prot_allocate_map(new_map_size);
+         allocated = true;
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //shrink_to_fit is only a request: keep the current map
+      }
+      BOOST_CONTAINER_CATCH_END
+      //If the allocation of the new map fails, there are no effects
+      if (!allocated)
+         return;
+
+      boost::container::move_n(start_node, new_map_size, new_map);
+      this->prot_deallocate_nodes_if_reservable(old_map, start_node);
+      this->prot_deallocate_nodes_if_reservable(end_node, old_map + difference_type(old_map_size));
+      this->prot_deallocate_map(old_map, old_map_size);
+
+      this->members_.m_map = new_map;
+      this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
+      //The start node moves to the first slot: unsigned wrap-around subtracts the offset
+      this->prot_shift_nodes(std::size_t(0u) - std::size_t(start_node - old_map));
    }
 
    enum { InitialMapSize = 4 };
@@ -1726,12 +1772,11 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
    void shrink_to_fit() BOOST_NOEXCEPT_OR_NOTHROW
    {
-      //This deque implementation already
-      //deallocates excess nodes when erasing
-      //so there is nothing to do except for
-      //empty deque
       if(this->empty()){
          this->prot_clear_map();
+      }
+      else{
+         this->prot_shrink_map_to_fit();
       }
    }
 
