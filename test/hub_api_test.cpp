@@ -53,6 +53,7 @@ int main() { return 0; }
 #include <vector>
 #include "hub_utility.hpp"
 #include "iterator_noexcept_utils.hpp"
+#include "container_noexcept_utils.hpp"
 
 enum tracked_provenance { ab_ovo = 0, from_copy, from_move };
 
@@ -771,6 +772,14 @@ const char *get_shared_memory_name()
 //The operations of the iterators cannot throw
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
+   < boost::container::hub<int> >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//The operations that do not allocate memory or move elements cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_basic_ops_are_nothrow
+   < boost::container::hub<int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_reverse_ops_are_nothrow
    < boost::container::hub<int> >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 

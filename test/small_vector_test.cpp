@@ -16,6 +16,7 @@
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include "iterator_noexcept_utils.hpp"
+#include "container_noexcept_utils.hpp"
 #include "unqualified_swap_test.hpp"
 #include "throwing_utilities.hpp"
 
@@ -761,6 +762,12 @@ bool test_assignment_with_propagated_unequal_allocators()
 //The operations of the iterators cannot throw
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
+   < boost::container::small_vector<int, 4> >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//The operations that do not allocate memory or move elements cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_are_nothrow
    < boost::container::small_vector<int, 4> >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
