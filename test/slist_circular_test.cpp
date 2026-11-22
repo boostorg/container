@@ -9,5 +9,6 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //Runs the slist tests with the deprecated circular representation
+#define BOOST_DISABLE_PRAGMA_MESSAGE
 #define BOOST_CONTAINER_CIRCULAR_SLIST
 #include "slist_test.cpp"
