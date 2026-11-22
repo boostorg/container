@@ -99,7 +99,8 @@ struct deque_block_traits
                                                                                        : default_block_size_initial;
    //Now select between the default or the specified by the user
    BOOST_STATIC_CONSTEXPR std::size_t user_or_default_value = BlockSize  ? BlockSize
-                                                            : BlockBytes ? (BlockBytes-1u)/sizeof(T) + 1u : default_block_size
+                                                            : BlockBytes ? BlockBytes/sizeof(T) + std::size_t(BlockBytes % sizeof(T) != 0u)
+                                                                         : default_block_size
                                                             ;
    //A block holds at least two elements (the default is at least default_min_block_size):
    //Some internal functions relay on it to simplify the code and avoid corner cases
