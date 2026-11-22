@@ -901,79 +901,79 @@ class flat_tree
    { return this->m_data; }
 
    BOOST_CONTAINER_NODISCARD inline
-      allocator_type get_allocator() const
+      allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.get_allocator(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      get_stored_allocator_const_return_t get_stored_allocator() const
+      get_stored_allocator_const_return_t get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       return flat_tree_get_stored_allocator(this->m_data.m_seq, dtl::bool_<has_stored_allocator_type>());
    }
 
    BOOST_CONTAINER_NODISCARD inline
-      get_stored_allocator_noconst_return_t get_stored_allocator()
+      get_stored_allocator_noconst_return_t get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {
       return flat_tree_get_stored_allocator(this->m_data.m_seq, dtl::bool_<has_stored_allocator_type>());
    }
 
    BOOST_CONTAINER_NODISCARD inline
-      iterator begin()
+      iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.begin(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator begin() const
+      const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->cbegin(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator cbegin() const
+      const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.begin(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      iterator end()
+      iterator end() BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.end(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator end() const
+      const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->cend(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator cend() const
+      const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.end(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      reverse_iterator rbegin()
+      reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
    { return reverse_iterator(this->end()); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator rbegin() const
+      const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->crbegin();  }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator crbegin() const
+      const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_reverse_iterator(this->cend());  }
 
    BOOST_CONTAINER_NODISCARD inline
-      reverse_iterator rend()
+      reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
    { return reverse_iterator(this->begin()); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator rend() const
+      const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->crend(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator crend() const
+      const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_reverse_iterator(this->cbegin()); }
 
    BOOST_CONTAINER_NODISCARD inline
-      bool empty() const
+      bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.empty(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      size_type size() const
+      size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.size(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      size_type max_size() const
+      size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_data.m_seq.max_size(); }
 
    inline void swap(flat_tree& other)
@@ -1481,7 +1481,7 @@ class flat_tree
    inline iterator erase(const_iterator first, const_iterator last)
    {  return this->m_data.m_seq.erase(first, last);  }
 
-   inline void clear()
+   inline void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {  this->m_data.m_seq.clear();  }
 
    //! <b>Effects</b>: Tries to deallocate the excess of memory created
@@ -1768,7 +1768,7 @@ class flat_tree
    {  return this->priv_lower_bound_range(this->cbegin(), this->cend(), k);  }
 
    BOOST_CONTAINER_NODISCARD inline
-      size_type capacity() const
+      size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       const bool value = boost::container::dtl::
          has_member_function_callable_with_capacity<container_type>::value;
