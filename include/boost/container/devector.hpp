@@ -2412,6 +2412,7 @@ class devector
    * **Complexity**: Linear in half the size of `*this`.
    */
    iterator erase(const_iterator position)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<T>::value)
    {
       return erase(position, position + 1);
    }
@@ -2436,6 +2437,7 @@ class devector
    * plus the distance between `first` and `last`.
    */
    iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<T>::value)
    {
       iterator nc_first = unconst_iterator(first);
       iterator nc_last  = unconst_iterator(last);
@@ -2461,6 +2463,7 @@ class devector
    * **Complexity**: Linear in half the size of `*this`.
    */
    iterator erase(iterator first, iterator last)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<T>::value)
    {
       if (BOOST_UNLIKELY(first == last))  //An empty range is a no-op
          return first;

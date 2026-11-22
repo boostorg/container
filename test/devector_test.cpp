@@ -4044,10 +4044,15 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_i
    < boost::container::devector<int> >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
-//The operations that do not allocate memory or move elements cannot throw
+//The operations that do not allocate memory cannot throw. erase cannot throw
+//if the move assignment of the element cannot throw
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_are_nothrow
    < boost::container::devector<int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
+   < boost::container::devector<int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((!boost::container::test::container_erase_is_nothrow
+   < boost::container::devector<boost::container::test::throwing_move_assign_value> >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main()

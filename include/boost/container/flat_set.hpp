@@ -136,9 +136,13 @@ class flat_set
 
    //! <b>Effects</b>: Default constructs an empty container.
    //!
+   //! <b>Throws</b>: Nothing if the default constructors of sequence_type and Compare
+   //!   cannot throw.
+   //!
    //! <b>Complexity</b>: Constant.
    inline
-   flat_set() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<tree_t>::value)
+   flat_set() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : tree_t()
    {}
 
@@ -363,13 +367,17 @@ class flat_set
       : tree_t(static_cast<const tree_t&>(x))
    {}
 
-   //! <b>Effects</b>: Move constructs thecontainer. Constructs *this using x's resources.
+   //! <b>Effects</b>: Move constructs the container. Constructs *this using x's resources.
+   //!
+   //! <b>Throws</b>: Nothing if the move constructor of sequence_type and the copy
+   //!   constructor of Compare cannot throw.
    //!
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline flat_set(BOOST_RV_REF(flat_set) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_copy_constructible<Compare>::value)
       : tree_t(BOOST_MOVE_BASE(tree_t, x))
    {}
 
@@ -397,13 +405,16 @@ class flat_set
    //! <b>Effects</b>: Move assignment. Move assigns the underlying sequence of x to *this.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
-   //!   is false and (allocation throws or value_type's move constructor throws)
+   //!   is false and (allocation throws or value_type's move constructor throws).
+   //!   Nothing if the move assignment of sequence_type and the copy assignment
+   //!   of Compare cannot throw.
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
    //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    inline flat_set& operator=(BOOST_RV_REF(flat_set) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<sequence_type>::value &&
+                        dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<flat_set&>(this->tree_t::operator=(BOOST_MOVE_BASE(tree_t, x)));  }
 
    //! <b>Effects</b>: x.swap(y)
@@ -851,19 +862,27 @@ class flat_set
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
+   //! <b>Throws</b>: Nothing if erase of sequence_type cannot throw.
+   //!
    //! <b>Complexity</b>: Linear to the elements after p
    //!
    //! <b>Note</b>: Invalidates iterators and references to the erased element and to the
    //!   elements after it, and the past-the-end iterator.
-   iterator erase(const_iterator p);
+   iterator erase(const_iterator p)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>())));
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
    //! <b>Returns</b>: An iterator to the element that last pointed to before the erasure.
    //!
+   //! <b>Throws</b>: Nothing if erase of sequence_type cannot throw.
+   //!
    //! <b>Complexity</b>: Linear to the distance between first and last, plus the number
    //!   of elements after last.
-   iterator erase(const_iterator first, const_iterator last);
+   iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>(), boost::move_detail::declval<const_iterator>())));
 
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
@@ -1383,7 +1402,8 @@ class flat_multiset
    typedef typename sequence_type::const_reverse_iterator                           const_reverse_iterator;
 
    //! @copydoc ::boost::container::flat_set::flat_set()
-   inline flat_multiset() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<tree_t>::value)
+   inline flat_multiset() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : tree_t()
    {}
 
@@ -1550,7 +1570,8 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::flat_set(flat_set &&)
    inline flat_multiset(BOOST_RV_REF(flat_multiset) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_copy_constructible<Compare>::value)
       : tree_t(boost::move(static_cast<tree_t&>(x)))
    {}
 
@@ -1570,7 +1591,8 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::operator=(flat_set &&)
    inline flat_multiset& operator=(BOOST_RV_REF(flat_multiset) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<sequence_type>::value &&
+                        dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<flat_multiset&>(this->tree_t::operator=(BOOST_MOVE_BASE(tree_t, x)));  }
 
    //! <b>Effects</b>: x.swap(y)
@@ -1828,13 +1850,17 @@ class flat_multiset
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::flat_set::erase(const_iterator)
-   iterator erase(const_iterator p);
+   iterator erase(const_iterator p)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>())));
 
    //! @copydoc ::boost::container::flat_set::erase(const key_type&)
    size_type erase(const key_type& x);
 
    //! @copydoc ::boost::container::flat_set::erase(const_iterator,const_iterator)
-   iterator erase(const_iterator first, const_iterator last);
+   iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>(), boost::move_detail::declval<const_iterator>())));
 
    //! @copydoc ::boost::container::flat_set::erase(K&&)
    template<class K>

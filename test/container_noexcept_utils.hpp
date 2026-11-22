@@ -78,6 +78,16 @@ struct container_erase_is_nothrow
                                                       , boost::move_detail::declval<cit>()));
 };
 
+//An element whose move assignment can throw: erase that moves elements
+//must not be noexcept
+struct throwing_move_assign_value
+{
+   throwing_move_assign_value() {}
+   throwing_move_assign_value(const throwing_move_assign_value&) {}
+   throwing_move_assign_value& operator=(const throwing_move_assign_value&)
+   {  return *this;  }
+};
+
 //All of the above for an allocator-aware reversible container
 template<class C>
 struct reversible_container_ops_are_nothrow

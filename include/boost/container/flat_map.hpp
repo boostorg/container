@@ -287,8 +287,12 @@ class flat_map
 
    //! <b>Effects</b>: Default constructs an empty flat_map.
    //!
+   //! <b>Throws</b>: Nothing if the default constructors of sequence_type and Compare
+   //!   cannot throw.
+   //!
    //! <b>Complexity</b>: Constant.
-   inline flat_map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<impl_tree_t>::value)
+   inline flat_map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : m_flat_tree()
    {}
 
@@ -526,11 +530,15 @@ class flat_map
    //! <b>Effects</b>: Move constructs a flat_map.
    //!   Constructs *this using x's resources.
    //!
+   //! <b>Throws</b>: Nothing if the move constructor of sequence_type and the copy
+   //!   constructor of Compare cannot throw.
+   //!
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline flat_map(BOOST_RV_REF(flat_map) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<impl_tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_copy_constructible<Compare>::value)
       : m_flat_tree(boost::move(x.m_flat_tree))
    {}
 
@@ -558,13 +566,16 @@ class flat_map
    //! <b>Effects</b>: Move assignment. Move assigns the underlying sequence of x to *this.
    //!
    //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
-   //!   is false and (allocation throws or value_type's move constructor throws)
+   //!   is false and (allocation throws or value_type's move constructor throws).
+   //!   Nothing if the move assignment of sequence_type and the copy assignment
+   //!   of Compare cannot throw.
    //!
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
    //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
    inline flat_map& operator=(BOOST_RV_REF(flat_map) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<impl_tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<sequence_type>::value &&
+                        dtl::is_nothrow_copy_assignable<Compare>::value)
    {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1521,11 +1532,15 @@ class flat_map
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
+   //! <b>Throws</b>: Nothing if erase of sequence_type cannot throw.
+   //!
    //! <b>Complexity</b>: Linear to the elements after p
    //!
    //! <b>Note</b>: Invalidates iterators and references to the erased element and to the
    //!   elements after it, and the past-the-end iterator.
    inline iterator erase(const_iterator p)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>())))
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,
          m_flat_tree.erase(BOOST_CONTAINER_FORCECOPY(impl_const_iterator, p)));
@@ -1563,9 +1578,13 @@ class flat_map
    //!
    //! <b>Returns</b>: An iterator to the element that last pointed to before the erasure.
    //!
+   //! <b>Throws</b>: Nothing if erase of sequence_type cannot throw.
+   //!
    //! <b>Complexity</b>: Linear to the distance between first and last, plus the number
    //!   of elements after last.
    inline iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>(), boost::move_detail::declval<const_iterator>())))
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,
          m_flat_tree.erase( BOOST_CONTAINER_FORCECOPY(impl_const_iterator, first)
@@ -2191,11 +2210,15 @@ class flat_multimap
    //
    //////////////////////////////////////////////
 
-   //! <b>Effects</b>: Default constructs an empty flat_map.
+   //! <b>Effects</b>: Default constructs an empty flat_multimap.
+   //!
+   //! <b>Throws</b>: Nothing if the default constructors of sequence_type and Compare
+   //!   cannot throw.
    //!
    //! <b>Complexity</b>: Constant.
    inline flat_multimap()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<impl_tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : m_flat_tree()
    {}
 
@@ -2438,12 +2461,16 @@ class flat_multimap
 
    //! <b>Effects</b>: Move constructs a flat_multimap. Constructs *this using x's resources.
    //!
+   //! <b>Throws</b>: Nothing if the move constructor of sequence_type and the copy
+   //!   constructor of Compare cannot throw.
+   //!
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline
    flat_multimap(BOOST_RV_REF(flat_multimap) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<impl_tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value &&
+                        dtl::is_nothrow_copy_constructible<Compare>::value)
       : m_flat_tree(boost::move(x.m_flat_tree))
    {}
 
@@ -2477,8 +2504,11 @@ class flat_multimap
    inline
    //! <b>Effects</b>: Move assignment. Move assigns the underlying sequence of x to *this.
    //!
+   //! <b>Throws</b>: Nothing if the move assignment of sequence_type and the copy assignment
+   //!   of Compare cannot throw.
    flat_multimap& operator=(BOOST_RV_REF(flat_multimap) x)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<impl_tree_t>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<sequence_type>::value &&
+                        dtl::is_nothrow_copy_assignable<Compare>::value)
       {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -2957,11 +2987,15 @@ class flat_multimap
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
+   //! <b>Throws</b>: Nothing if erase of sequence_type cannot throw.
+   //!
    //! <b>Complexity</b>: Linear to the elements after p
    //!
    //! <b>Note</b>: Invalidates iterators and references to the erased element and to the
    //!   elements after it, and the past-the-end iterator.
    inline iterator erase(const_iterator p)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>())))
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,
          m_flat_tree.erase(BOOST_CONTAINER_FORCECOPY(impl_const_iterator, p)));
@@ -2997,9 +3031,13 @@ class flat_multimap
    //!
    //! <b>Returns</b>: An iterator to the element that last pointed to before the erasure.
    //!
+   //! <b>Throws</b>: Nothing if erase of sequence_type cannot throw.
+   //!
    //! <b>Complexity</b>: Linear to the distance between first and last, plus the number
    //!   of elements after last.
    inline iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>(), boost::move_detail::declval<const_iterator>())))
    {
       return BOOST_CONTAINER_FORCECOPY(iterator,
          m_flat_tree.erase( BOOST_CONTAINER_FORCECOPY(impl_const_iterator, first)

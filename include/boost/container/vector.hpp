@@ -2377,11 +2377,12 @@ private:
 
    //! <b>Effects</b>: Erases the element at position pos.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the elements between pos and the
    //!   last element. Constant if pos is the last element.
    iterator erase(const_iterator position)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<T>::value)
    {
       BOOST_ASSERT(this->priv_in_range(position));
       const pointer p = vector_iterator_get_ptr(position);
@@ -2401,11 +2402,12 @@ private:
 
    //! <b>Effects</b>: Erases the elements pointed by [first, last).
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the distance between first and last
    //!   plus linear to the elements between pos and the last element.
    iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<T>::value)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(first));
       BOOST_ASSERT(this->priv_in_range_or_end(last));
@@ -2435,9 +2437,16 @@ private:
    //!
    //! <b>Complexity</b>: Constant.
    inline void swap(vector& x)
+      #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+      //A version 0 allocator (static_vector) stores the elements in itself, so
+      //the elements are swapped one by one
       BOOST_NOEXCEPT_IF( ((allocator_traits_type::propagate_on_container_swap::value
                                     || allocator_traits_type::is_always_equal::value) &&
                                     !dtl::is_version<allocator_type, 0>::value))
+      #else
+      BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
+                      || allocator_traits_type::is_always_equal::value)
+      #endif
    {
       this->priv_swap(x, dtl::bool_<dtl::is_version<allocator_type, 0>::value>());
    }

@@ -1475,10 +1475,17 @@ class flat_tree
       return ret;
    }
 
+   //The condition is in the exception specification and not in a static member
+   //because the exception specification is instantiated only when needed: a
+   //recursive container has an incomplete value_type when flat_tree is instantiated
    inline iterator erase(const_iterator position)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>())))
    {  return this->m_data.m_seq.erase(position);  }
 
    inline iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(noexcept(boost::move_detail::declval<sequence_type&>().erase
+         (boost::move_detail::declval<const_iterator>(), boost::move_detail::declval<const_iterator>())))
    {  return this->m_data.m_seq.erase(first, last);  }
 
    inline void clear() BOOST_NOEXCEPT_OR_NOTHROW
