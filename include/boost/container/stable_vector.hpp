@@ -997,7 +997,7 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      allocator_type get_allocator() const
+      allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->priv_node_alloc();  }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.

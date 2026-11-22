@@ -639,7 +639,7 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      bool empty() const
+      bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return !this->size();   }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the list.
@@ -648,7 +648,7 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      size_type size() const
+      size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->icont().size(); }
 
    //! <b>Effects</b>: Returns the largest possible size of the list.
@@ -657,7 +657,7 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      size_type max_size() const
+      size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return AllocHolder::max_size();  }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
@@ -704,7 +704,7 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      reference front()
+      reference front() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return *this->begin();
@@ -719,7 +719,7 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      const_reference front() const
+      const_reference front() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return *this->begin();
@@ -956,7 +956,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Amortized constant time.
-   void pop_front()
+   void pop_front() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       this->icont().pop_front_and_dispose(Destroyer(this->node_alloc()));
@@ -973,7 +973,7 @@ class slist
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Does not invalidate iterators or references to non erased elements.
-   iterator erase_after(const_iterator prev_p)
+   iterator erase_after(const_iterator prev_p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       return iterator(this->icont().erase_after_and_dispose(prev_p.get(), Destroyer(this->node_alloc())));
    }
@@ -989,7 +989,7 @@ class slist
    //! <b>Complexity</b>: Linear to the number of erased elements.
    //!
    //! <b>Note</b>: Does not invalidate iterators or references to non erased elements.
-   iterator erase_after(const_iterator before_first, const_iterator last)
+   iterator erase_after(const_iterator before_first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {
       return iterator(this->icont().erase_after_and_dispose(before_first.get(), last.get(), Destroyer(this->node_alloc())));
    }
@@ -1014,7 +1014,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the list.
-   void clear()
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {  this->icont().clear_and_dispose(Destroyer(this->node_alloc()));  }
 
    //////////////////////////////////////////////
