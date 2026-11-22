@@ -1724,7 +1724,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       }
    }
 
-   void shrink_to_fit()
+   void shrink_to_fit() BOOST_NOEXCEPT_OR_NOTHROW
    {
       //This deque implementation already
       //deallocates excess nodes when erasing

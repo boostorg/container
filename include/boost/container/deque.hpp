@@ -609,7 +609,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!
    //! <b>Note</b>: No iterator, reference or pointer to an element is invalidated. If the deque is
    //!   empty, the past-the-end iterator is invalidated.
-   void shrink_to_fit();
+   void shrink_to_fit() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //////////////////////////////////////////////
    //

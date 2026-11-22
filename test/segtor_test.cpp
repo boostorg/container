@@ -481,6 +481,8 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_
    < boost::container::segtor<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
    < boost::container::segtor<int> >::value));
+//shrink_to_fit only deallocates memory
+BOOST_CONTAINER_STATIC_ASSERT((noexcept(boost::move_detail::declval< boost::container::segtor<int>& >().shrink_to_fit())));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 int main ()

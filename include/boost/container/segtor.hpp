@@ -816,7 +816,7 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //!
    //! <b>Note</b>: No iterator, reference or pointer to an element is invalidated. If the segtor
    //!   is empty, the past-the-end iterator is invalidated.
-   void shrink_to_fit();
+   void shrink_to_fit() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
