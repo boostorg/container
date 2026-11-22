@@ -418,7 +418,7 @@ class set
    //!   was passed to the object's constructor.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const;
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
    //!
@@ -427,7 +427,7 @@ class set
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator();
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
    //!
@@ -436,49 +436,49 @@ class set
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const;
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns an iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant
-   iterator begin();
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const;
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const;
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns an iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end();
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const;
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const;
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -486,7 +486,7 @@ class set
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin();
+   reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -494,7 +494,7 @@ class set
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const;
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -502,7 +502,7 @@ class set
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const;
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
    //! of the reversed container.
@@ -510,7 +510,7 @@ class set
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend();
+   reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
    //! of the reversed container.
@@ -518,7 +518,7 @@ class set
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const;
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
    //! of the reversed container.
@@ -526,28 +526,28 @@ class set
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const;
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns true if the container contains no elements.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const;
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the number of the elements contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const;
+   size_type size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the largest possible size of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const;
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW;
    #endif   //   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -807,14 +807,14 @@ class set
    //!   returns end().
    //!
    //! <b>Complexity</b>: Amortized constant time
-   iterator erase(const_iterator p);
+   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
    //! <b>Returns</b>: Returns last.
    //!
    //! <b>Complexity</b>: log(size())+N where N is the distance from first to last.
-   iterator erase(const_iterator first, const_iterator last);
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
@@ -826,7 +826,7 @@ class set
    size_type erase(K && k);
 
    //! @copydoc ::boost::container::map::extract(const_iterator)
-   node_type extract(const_iterator p);
+   node_type extract(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::map::extract(const key_type&)
    node_type extract(const key_type& x);
@@ -851,7 +851,7 @@ class set
    //! <b>Postcondition</b>: size() == 0.
    //!
    //! <b>Complexity</b>: linear in size().
-   void clear();
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the comparison object out
    //!   of which a was constructed.
@@ -1453,22 +1453,22 @@ class multiset
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::set::get_allocator()
-   allocator_type get_allocator() const;
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::get_stored_allocator()
-   stored_allocator_type &get_stored_allocator();
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::get_stored_allocator() const
-   const stored_allocator_type &get_stored_allocator() const;
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::begin()
-   iterator begin();
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::begin() const
-   const_iterator begin() const;
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::cbegin() const
-   const_iterator cbegin() const;
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::end()
    iterator end() BOOST_NOEXCEPT_OR_NOTHROW;
@@ -1498,13 +1498,13 @@ class multiset
    const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::empty() const
-   bool empty() const;
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::size() const
-   size_type size() const;
+   size_type size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::max_size() const
-   size_type max_size() const;
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1669,20 +1669,20 @@ class multiset
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::set::erase(const_iterator)
-   iterator erase(const_iterator p);
+   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::erase(const key_type&)
    size_type erase(const key_type& x);
 
    //! @copydoc ::boost::container::set::erase(const_iterator,const_iterator)
-   iterator erase(const_iterator first, const_iterator last);
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::erase(K&&)
    template<class K>
    size_type erase(K && k);
 
    //! @copydoc ::boost::container::multimap::extract(const_iterator)
-   node_type extract(const_iterator p);
+   node_type extract(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::multimap::extract(const key_type&)
    node_type extract(const key_type& x);

@@ -793,48 +793,48 @@ class tree
    {  return this->icont().key_comp(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      allocator_type get_allocator() const
+      allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_type(this->node_alloc()); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const stored_allocator_type &get_stored_allocator() const
+      const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      stored_allocator_type &get_stored_allocator()
+      stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
    BOOST_CONTAINER_NODISCARD inline
-      iterator begin()
+      iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
    { return iterator(this->icont().begin()); }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator begin() const
+      const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cbegin();  }
 
    BOOST_CONTAINER_NODISCARD inline
-      iterator end()
+      iterator end() BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(this->icont().end());  }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator end() const
+      const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cend();  }
 
    BOOST_CONTAINER_NODISCARD inline
-      reverse_iterator rbegin()
+      reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
    {  return reverse_iterator(end());  }
 
    
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator rbegin() const
+      const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->crbegin();  }
 
    BOOST_CONTAINER_NODISCARD inline
-      reverse_iterator rend()
+      reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
    {  return reverse_iterator(begin());   }
 
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator rend() const
+      const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->crend();   }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
@@ -843,7 +843,7 @@ class tree
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator cbegin() const
+      const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_iterator(this->non_const_icont().begin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
@@ -852,7 +852,7 @@ class tree
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator cend() const
+      const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_iterator(this->non_const_icont().end()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -862,7 +862,7 @@ class tree
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator crbegin() const
+      const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_reverse_iterator(cend()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -872,19 +872,19 @@ class tree
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
-      const_reverse_iterator crend() const
+      const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_reverse_iterator(cbegin()); }
 
    BOOST_CONTAINER_NODISCARD inline
-      bool empty() const
+      bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return !this->size();  }
 
    BOOST_CONTAINER_NODISCARD inline
-      size_type size() const
+      size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->icont().size();   }
 
    BOOST_CONTAINER_NODISCARD inline
-      size_type max_size() const
+      size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return AllocHolder::max_size();  }
 
    inline void swap(ThisType& x)
@@ -1303,7 +1303,7 @@ class tree
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
-   iterator erase(const_iterator position)
+   iterator erase(const_iterator position) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
       return iterator(this->icont().erase_and_dispose(position.get(), Destroyer(this->node_alloc())));
@@ -1349,7 +1349,7 @@ class tree
       return ret;
    }
 
-   iterator erase(const_iterator first, const_iterator last)
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(first == last || (first != this->cend() && (priv_is_linked)(first)));
       BOOST_ASSERT(first == last || (priv_is_linked)(last));
@@ -1380,7 +1380,7 @@ class tree
       return node_type();
    }
 
-   node_type extract(const_iterator position)
+   node_type extract(const_iterator position) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
       iiterator const iit(position.get());
@@ -1466,7 +1466,7 @@ class tree
    template<class C2>
    inline void merge_equal(tree<T, KeyOfValue, C2, Allocator, Options>& source)
    {  return this->icont().merge_equal(source.icont());  }
-   inline void clear()
+   inline void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {  AllocHolder::clear(alloc_version());  }
 
    // search operations. Const and non-const overloads even if no iterator is returned

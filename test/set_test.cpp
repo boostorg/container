@@ -28,6 +28,8 @@
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include "iterator_noexcept_utils.hpp"
+#include "container_noexcept_utils.hpp"
+#include "throwing_utilities.hpp"
 #include "unqualified_swap_test.hpp"
 #include <utility> //for std::pair
 
@@ -424,6 +426,19 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_i
    < boost::container::set<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
    < boost::container::multiset<int> >::value));
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//The accessors, clear, erase and extract cannot throw, also with a comparator
+//whose copy can throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::set<int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::multiset<int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::set<int, boost::container::test::copy_assign_counting_less<int> > >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::multiset<int, boost::container::test::copy_assign_counting_less<int> > >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 //The hint version returns an iterator and, if the insertion fails, nh keeps the node.

@@ -444,7 +444,7 @@ class map
    //!   was passed to the object's constructor.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const;
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
    //!
@@ -1278,7 +1278,7 @@ class map
    //!
    //! <b>Note</b>: Invalidates the iterators to the extracted element. The references and pointers
    //!   to it stay valid: they refer to the element owned by the node handle.
-   node_type extract(const_iterator position)
+   node_type extract(const_iterator position) BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->base_t::extract(position);  }
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
@@ -2053,22 +2053,22 @@ class multimap
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::set::get_allocator()
-   allocator_type get_allocator() const;
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::get_stored_allocator()
-   stored_allocator_type &get_stored_allocator();
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::get_stored_allocator() const
-   const stored_allocator_type &get_stored_allocator() const;
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::begin()
-   iterator begin();
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::begin() const
-   const_iterator begin() const;
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::cbegin() const
-   const_iterator cbegin() const;
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::end()
    iterator end() BOOST_NOEXCEPT_OR_NOTHROW;
@@ -2098,13 +2098,13 @@ class multimap
    const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::empty() const
-   bool empty() const;
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::size() const
-   size_type size() const;
+   size_type size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::max_size() const
-   size_type max_size() const;
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -2293,13 +2293,13 @@ class multimap
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::set::erase(const_iterator)
-   iterator erase(const_iterator p);
+   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::erase(const key_type&)
    size_type erase(const key_type& x);
 
    //! @copydoc ::boost::container::set::erase(const_iterator,const_iterator)
-   iterator erase(const_iterator first, const_iterator last);
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::erase(K&&)
    template<class K>
@@ -2323,7 +2323,7 @@ class multimap
    {  return this->base_t::extract(k);  }
 
    //! @copydoc ::boost::container::map::extract(const_iterator)
-   node_type extract(const_iterator position)
+   node_type extract(const_iterator position) BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->base_t::extract(position);  }
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
