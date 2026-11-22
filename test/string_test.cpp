@@ -2797,6 +2797,101 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothro
    < boost::container::string >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
+//The search functions, compare and the relational operators cannot throw, also
+//the overloads that take a std or boost string view
+template<class S, class SV>
+void test_string_search_noexcept()
+{
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   typedef typename S::value_type CharT;
+   const S s;
+   const CharT *const p = s.c_str();
+   const CharT c = CharT();
+   const SV sv;
+
+   //find family
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find(s))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find(sv))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find(p, 0u, 1u))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find(p))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find(c))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.rfind(s))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.rfind(sv))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.rfind(p, 0u, 1u))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.rfind(p))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.rfind(c))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_of(s))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_of(sv))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_of(p, 0u, 1u))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_of(p))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_of(c))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_of(s))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_of(sv))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_of(p, 0u, 1u))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_of(p))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_of(c))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_not_of(s))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_not_of(sv))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_not_of(p, 0u, 1u))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_not_of(p))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_first_not_of(c))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_not_of(s))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_not_of(sv))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_not_of(p, 0u, 1u))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_not_of(p))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.find_last_not_of(c))));
+
+   //compare
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.compare(s))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.compare(sv))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s.compare(p))));
+
+   //Relational operators
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s == s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s == p)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(p == s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s == sv)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(sv == s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s != s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s != p)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(p != s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s != sv)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(sv != s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s < s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s < p)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(p < s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s < sv)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(sv < s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s > s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s > p)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(p > s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s > sv)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(sv > s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s <= s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s <= p)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(p <= s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s <= sv)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(sv <= s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s >= s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s >= p)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(p >= s)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(s >= sv)));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(sv >= s)));
+
+   (void)s; (void)p; (void)c; (void)sv;
+   #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+}
+
+void test_string_search_noexcept_all()
+{
+   test_string_search_noexcept<boost::container::string,  boost::string_view>();
+   test_string_search_noexcept<boost::container::wstring, boost::wstring_view>();
+   #if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
+   test_string_search_noexcept<boost::container::string,  std::string_view>();
+   test_string_search_noexcept<boost::container::wstring, std::wstring_view>();
+   #endif
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2907,6 +3002,8 @@ int main()
    test_string_view_constructor_allocator();
 
    test_ctad_with_allocator();
+
+   test_string_search_noexcept_all();
 
 return boost::report_errors();
 }

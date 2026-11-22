@@ -717,6 +717,10 @@ class basic_string_base
 //! optimization), so after swap() or move assignment, iterators, references and pointers
 //! to the characters of a short string are invalidated.
 //!
+//! The member functions and operators that take a <tt>BasicStringView<CharT, Traits></tt>
+//! argument accept \c std::basic_string_view and \c boost::basic_string_view. The view type
+//! must have \c data() and \c size() member functions that do not throw.
+//!
 //! \tparam CharT The type of character it contains.
 //! \tparam Traits The Character Traits type, which encapsulates basic character operations
 //! \tparam Allocator The allocator, used for internal memory management. Use void
@@ -2586,7 +2590,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_NODISCARD inline
-      size_type find(const basic_string& s, size_type pos = 0) const
+      size_type find(const basic_string& s, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
    { return find(s.c_str(), pos, s.size()); }
 
    //! <b>Effects</b>: Determines the lowest position xpos, if possible, such that both
@@ -2599,7 +2603,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      size_type find(BasicStringView<CharT, Traits> sv, size_type pos = 0) const
+      size_type find(BasicStringView<CharT, Traits> sv, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->find(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
@@ -2609,7 +2613,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find(basic_string<CharT,traits,allocator_type>(s,n),pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find(const CharT* s, size_type pos, size_type n) const
+      size_type find(const CharT* s, size_type pos, size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0 || n == 0);
       if (pos > this->size() || n > this->size() - pos)
@@ -2633,7 +2637,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find(const CharT* s, size_type pos = 0) const
+      size_type find(const CharT* s, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0);
       return this->find(s, pos, Traits::length(s));
@@ -2643,7 +2647,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find(basic_string<CharT,traits,allocator_type>(1,c), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find(CharT c, size_type pos = 0) const
+      size_type find(CharT c, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       const size_type sz = this->size();
       if (pos >= sz)
@@ -2667,7 +2671,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_NODISCARD inline
-      size_type rfind(const basic_string& str, size_type pos = npos) const
+      size_type rfind(const basic_string& str, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->rfind(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such
@@ -2680,7 +2684,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      size_type rfind(BasicStringView<CharT, Traits> sv, size_type pos = npos) const
+      size_type rfind(BasicStringView<CharT, Traits> sv, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->rfind(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
@@ -2690,7 +2694,7 @@ class basic_string
    //!
    //! <b>Returns</b>: rfind(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type rfind(const CharT* s, size_type pos, size_type n) const
+      size_type rfind(const CharT* s, size_type pos, size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0 || n == 0);
       const size_type len = this->size();
@@ -2714,7 +2718,7 @@ class basic_string
    //!
    //! <b>Returns</b>: rfind(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type rfind(const CharT* s, size_type pos = npos) const
+      size_type rfind(const CharT* s, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0);
       return this->rfind(s, pos, Traits::length(s));
@@ -2724,7 +2728,7 @@ class basic_string
    //!
    //! <b>Returns</b>: rfind(basic_string<CharT,traits,allocator_type>(1,c),pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type rfind(CharT c, size_type pos = npos) const
+      size_type rfind(CharT c, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       const size_type len = this->size();
 
@@ -2747,7 +2751,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_of(const basic_string& str, size_type pos = 0) const
+      size_type find_first_of(const basic_string& str, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_first_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the lowest position xpos, if possible, such that both of the
@@ -2759,7 +2763,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_of(BasicStringView<CharT, Traits> sv, size_type pos = 0) const
+      size_type find_first_of(BasicStringView<CharT, Traits> sv, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_first_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
@@ -2769,7 +2773,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_first_of(const CharT* s, size_type pos, size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0 || n == 0);
       const size_type sz = this->size();
@@ -2790,7 +2794,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_of(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_of(const CharT* s, size_type pos = 0) const
+      size_type find_first_of(const CharT* s, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0);
       return this->find_first_of(s, pos, Traits::length(s));
@@ -2802,7 +2806,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_of(basic_string<CharT,traits,allocator_type>(1,c), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_of(CharT c, size_type pos = 0) const
+      size_type find_first_of(CharT c, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
     { return this->find(c, pos); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such that both of
@@ -2813,7 +2817,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_of(const basic_string& str, size_type pos = npos) const
+      size_type find_last_of(const basic_string& str, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_last_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such that both of
@@ -2825,7 +2829,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_of(BasicStringView<CharT, Traits> sv, size_type pos = npos) const
+      size_type find_last_of(BasicStringView<CharT, Traits> sv, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_last_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
@@ -2835,7 +2839,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_last_of(const CharT* s, size_type pos, size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0 || n == 0);
       const size_type len = this->size();
@@ -2858,7 +2862,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_of(basic_string<CharT,traits,allocator_type>(1,c),pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_of(const CharT* s, size_type pos = npos) const
+      size_type find_last_of(const CharT* s, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0);
       return this->find_last_of(s, pos, Traits::length(s));
@@ -2868,7 +2872,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_of(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_of(CharT c, size_type pos = npos) const
+      size_type find_last_of(CharT c, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
       {  return this->rfind(c, pos);   }
 
    //! <b>Effects</b>: Determines the lowest position xpos, if possible, such that
@@ -2880,7 +2884,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_not_of(const basic_string& str, size_type pos = 0) const
+      size_type find_first_not_of(const basic_string& str, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_first_not_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the lowest position xpos, if possible, such that
@@ -2893,7 +2897,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_not_of(BasicStringView<CharT, Traits> sv, size_type pos = 0) const
+      size_type find_first_not_of(BasicStringView<CharT, Traits> sv, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_first_not_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
@@ -2902,7 +2906,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_not_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_not_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_first_not_of(const CharT* s, size_type pos, size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0 || n == 0);
       if (pos > this->size())
@@ -2922,7 +2926,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_not_of(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_not_of(const CharT* s, size_type pos = 0) const
+      size_type find_first_not_of(const CharT* s, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0);
       return this->find_first_not_of(s, pos, Traits::length(s));
@@ -2932,7 +2936,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_not_of(basic_string(1, c), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_not_of(CharT c, size_type pos = 0) const
+      size_type find_first_not_of(CharT c, size_type pos = 0) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (pos > this->size())
          return npos;
@@ -2954,7 +2958,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_not_of(const basic_string& str, size_type pos = npos) const
+      size_type find_last_not_of(const basic_string& str, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_last_not_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such that
@@ -2966,7 +2970,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_not_of(BasicStringView<CharT, Traits> sv, size_type pos = npos) const
+      size_type find_last_not_of(BasicStringView<CharT, Traits> sv, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->find_last_not_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
@@ -2976,7 +2980,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_not_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_not_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_last_not_of(const CharT* s, size_type pos, size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0 || n == 0);
       const size_type len = this->size();
@@ -2998,7 +3002,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_not_of(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_not_of(const CharT* s, size_type pos = npos) const
+      size_type find_last_not_of(const CharT* s, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0);
       return this->find_last_not_of(s, pos, Traits::length(s));
@@ -3008,7 +3012,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_not_of(basic_string(1, c), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_not_of(CharT c, size_type pos = npos) const
+      size_type find_last_not_of(CharT c, size_type pos = npos) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       const size_type len = this->size();
 
@@ -3051,7 +3055,7 @@ class basic_string
    //!   Otherwise, returns a value < 0 if size() < str.size(), a 0 value if size() == str.size(),
    //!   and value > 0 if size() > str.size()
    BOOST_CONTAINER_NODISCARD inline
-      int compare(const basic_string& str) const
+      int compare(const basic_string& str) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       const pointer addr     = this->priv_addr();
       const pointer str_addr = str.priv_addr();
@@ -3063,7 +3067,7 @@ class basic_string
    //! <b>Returns</b>: compare(basic_string(sv)).
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      int compare(BasicStringView<CharT,Traits> sv) const
+      int compare(BasicStringView<CharT,Traits> sv) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       const pointer addr = this->priv_addr();
       return this->s_compare(addr, addr + difference_type(this->priv_size()), sv.data(), sv.data() + difference_type(sv.size()));
@@ -3150,7 +3154,7 @@ class basic_string
    //!
    //! <b>Returns</b>: compare(basic_string(s)).
    BOOST_CONTAINER_NODISCARD inline
-      int compare(const CharT* s) const
+      int compare(const CharT* s) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(s != 0);
       const_pointer const addr = this->priv_addr();
@@ -3805,7 +3809,7 @@ template <class CharT, class Traits, class Allocator, class Options> inline
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator==(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator==(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return x.size() == y.size() &&
           Traits::compare(x.data(), y.data(), x.size()) == 0;
@@ -3813,7 +3817,7 @@ operator==(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_st
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator==(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator==(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {
    BOOST_ASSERT(s != 0);
    typename basic_string<CharT,Traits,Allocator,Options>::size_type n = Traits::length(s);
@@ -3822,7 +3826,7 @@ operator==(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator==(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
+operator==(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s) BOOST_NOEXCEPT_OR_NOTHROW
 {
    BOOST_ASSERT(s != 0);
    typename basic_string<CharT,Traits,Allocator,Options>::size_type n = Traits::length(s);
@@ -3834,7 +3838,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-      operator==( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
+      operator==( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return x.size() == y.size() &&
           dtl::string_traits_compare<Traits>(x.data(), y.data(), x.size()) == 0;
@@ -3845,7 +3849,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-      operator==( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
+      operator==( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return x.size() == y.size() &&
           dtl::string_traits_compare<Traits>(x.data(), y.data(), x.size()) == 0;
@@ -3853,19 +3857,19 @@ inline
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator!=(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator!=(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(x == y);  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator!=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator!=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return !(s == y);
 }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator!=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
+operator!=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return !(x == s);
 }
@@ -3875,7 +3879,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator!=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator!=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(x == y);  }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -3883,27 +3887,27 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator!=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
+operator!=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(x == y);  }
 
 // Operator< (and also >, <=, and >=).
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator<(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return x.compare(y) < 0;
 }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator<(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return y.compare(s) > 0;
 }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
+operator<(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s) BOOST_NOEXCEPT_OR_NOTHROW
 {
    return x.compare(s) < 0;
 }
@@ -3913,7 +3917,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator<( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return y.compare(x) > 0;  }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -3921,22 +3925,22 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<(  const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
+operator<(  const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return x.compare(y) < 0;  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator>(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {  return y < x;  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator>(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {  return y < s;  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
+operator>(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s) BOOST_NOEXCEPT_OR_NOTHROW
 {  return s < x;  }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -3944,7 +3948,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator>( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return y < x;  }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -3952,24 +3956,24 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
+operator>( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return y < x;  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<=(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator<=(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
 {
   return !(y < x);
 }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator<=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(y < s);  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
+operator<=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(s < x);  }
 
 
@@ -3978,7 +3982,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator<=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(y < x);  }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -3986,23 +3990,23 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
+operator<=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(y < x);  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
 operator>=(const basic_string<CharT,Traits,Allocator,Options>& x,
-           const basic_string<CharT,Traits,Allocator,Options>& y)
+           const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(x < y);  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator>=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(s < y);  }
 
 template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
+operator>=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(x < s);  }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -4010,7 +4014,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
+operator>=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(x < y);  }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -4018,7 +4022,7 @@ inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
+operator>=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(x < y);  }
 
 // Swap.
