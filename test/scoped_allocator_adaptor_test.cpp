@@ -52,6 +52,7 @@ struct mark_on_destructor
 bool mark_on_destructor::destroyed = false;
 
 #include <boost/container/scoped_allocator.hpp>
+#include "throwing_utilities.hpp"
 #include <boost/container/vector.hpp>
 #include <boost/container/detail/pair.hpp>
 
@@ -108,6 +109,80 @@ void test_destroy_throwing_destructor()
 {}
 
 #endif   //BOOST_NO_EXCEPTIONS
+
+//The constructors (except the default constructor), the accessors, deallocate and
+//the comparison operators cannot throw. Rebound has the same inner allocators as
+//Scoped and an outer allocator of another value type.
+template<class Scoped, class Rebound>
+void test_scoped_allocator_noexcept()
+{
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   typedef typename Scoped::pointer pointer;
+   //The copy and move constructors are noexcept because the ones of the allocators are
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped(declval<const Scoped&>()))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped(declval<Scoped>()))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped(declval<const Rebound&>()))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped(declval<Rebound>()))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<Scoped&>().outer_allocator())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<const Scoped&>().outer_allocator())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<Scoped&>().inner_allocator())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<const Scoped&>().inner_allocator())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<Scoped&>().deallocate(declval<pointer>(), 1u))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<const Scoped&>() == declval<const Scoped&>())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<const Scoped&>() != declval<const Scoped&>())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<const Scoped&>() == declval<const Rebound&>())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(declval<const Scoped&>() != declval<const Rebound&>())));
+   #endif
+}
+
+void test_scoped_allocator_noexcept_all()
+{
+   using namespace boost::container;
+   typedef propagation_test_allocator<tagged_integer<0>, 0>   OuterAlloc;
+   typedef propagation_test_allocator<tagged_integer<9>, 0>   Rebound9OuterAlloc;
+   typedef propagation_test_allocator<tagged_integer<1>, 1>   InnerAlloc1;
+   typedef propagation_test_allocator<tagged_integer<2>, 2>   InnerAlloc2;
+   typedef scoped_allocator_adaptor< OuterAlloc >                                  Scoped0Inner;
+   typedef scoped_allocator_adaptor< OuterAlloc, InnerAlloc1 >                     Scoped1Inner;
+   typedef scoped_allocator_adaptor< OuterAlloc, InnerAlloc1, InnerAlloc2 >        Scoped2Inner;
+   typedef scoped_allocator_adaptor< Rebound9OuterAlloc >                          Rebound9Scoped0Inner;
+   typedef scoped_allocator_adaptor< Rebound9OuterAlloc, InnerAlloc1 >             Rebound9Scoped1Inner;
+   typedef scoped_allocator_adaptor< Rebound9OuterAlloc, InnerAlloc1, InnerAlloc2 > Rebound9Scoped2Inner;
+
+   //Constructors from the outer and the inner allocators
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped0Inner(declval<const OuterAlloc&>()))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped0Inner(declval<const Rebound9OuterAlloc&>()))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped1Inner(declval<const OuterAlloc&>(), declval<const InnerAlloc1&>()))));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped2Inner
+      (declval<const OuterAlloc&>(), declval<const InnerAlloc1&>(), declval<const InnerAlloc2&>()))));
+   #endif
+
+   //The defaulted default constructor is noexcept if the default constructors of
+   //all the allocators are noexcept (the user-provided body of old Clang versions is not)
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) &&\
+       !(defined(__clang__) && defined(__apple_build_version__) && (__clang_major__ < 8)) &&\
+       !(defined(__clang__) && !defined(__apple_build_version__) &&\
+         ((__clang_major__ < 3) || ((__clang_major__ == 3) && (__clang_minor__ < 9))))
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped0Inner())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped1Inner())));
+   BOOST_CONTAINER_STATIC_ASSERT((noexcept(Scoped2Inner())));
+   //If the default constructor of the outer or of an inner allocator is not noexcept
+   typedef boost::container::test::throwing_default_ctor_allocator<int> ThrowingCtorAlloc;
+   typedef scoped_allocator_adaptor< ThrowingCtorAlloc >                           ThrowingScoped0Inner;
+   typedef scoped_allocator_adaptor< ThrowingCtorAlloc, InnerAlloc1 >              ThrowingScoped1Inner;
+   typedef scoped_allocator_adaptor< OuterAlloc, InnerAlloc1, ThrowingCtorAlloc >  ThrowingInnerScoped2Inner;
+   BOOST_CONTAINER_STATIC_ASSERT((!noexcept(ThrowingScoped0Inner())));
+   BOOST_CONTAINER_STATIC_ASSERT((!noexcept(ThrowingScoped1Inner())));
+   BOOST_CONTAINER_STATIC_ASSERT((!noexcept(ThrowingInnerScoped2Inner())));
+   #endif
+
+   test_scoped_allocator_noexcept<Scoped0Inner, Rebound9Scoped0Inner>();
+   test_scoped_allocator_noexcept<Scoped1Inner, Rebound9Scoped1Inner>();
+   test_scoped_allocator_noexcept<Scoped2Inner, Rebound9Scoped2Inner>();
+}
 
 int main()
 {
@@ -1426,6 +1501,8 @@ int main()
    }
 
    test_destroy_throwing_destructor();
+
+   test_scoped_allocator_noexcept_all();
 
    return ::boost::report_errors();
 }
