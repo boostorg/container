@@ -1686,7 +1686,7 @@ public:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear in the number of active blocks in *this.
-   iterator get_iterator(const_pointer p)
+   iterator get_iterator(const_pointer p) noexcept
    {   
       std::less<const T*> less;
       for(auto pbb = blist.next; pbb != blist.header(); pbb = pbb-> next) {
@@ -1716,7 +1716,7 @@ public:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear in the number of active blocks in *this.
-   const_iterator get_iterator(const_pointer p) const
+   const_iterator get_iterator(const_pointer p) const noexcept
    {
       return const_cast<hub*>(this)->get_iterator(p);
    }

@@ -802,6 +802,11 @@ void test_hive_operations(const typename Nest::allocator_type& al)
          const_pointer p = boost::pointer_traits<const_pointer>::pointer_to(*it);
          BOOST_TEST(x.get_iterator(p) == it);
          BOOST_TEST(cx.get_iterator(p) == it);
+         //get_iterator cannot throw
+         #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+         BOOST_CONTAINER_STATIC_ASSERT(( noexcept(x.get_iterator(p)) ));
+         BOOST_CONTAINER_STATIC_ASSERT(( noexcept(cx.get_iterator(p)) ));
+         #endif
       }
    }
 }

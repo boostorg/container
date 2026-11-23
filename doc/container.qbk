@@ -1162,7 +1162,6 @@ constant time.
   three_way_comparable]: Making them so would require extra block metadata and bookkeeping, and this overhead, which
   is quite significant for small block sizes as used by `boost::container::hub`, was not deemed worth imposing over
   the potential usefulness of having ordered iterators.
-* `get_iterator` is not `noexcept`.
 * No operations are marked `constexpr`.
 
 The following functionality is specific to `boost::container::hub`:

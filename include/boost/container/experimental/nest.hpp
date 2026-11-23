@@ -2116,7 +2116,7 @@ class nest
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear in the number of blocks that contain elements.
-   iterator get_iterator(const_pointer p)
+   iterator get_iterator(const_pointer p) BOOST_NOEXCEPT
    {
       std::less<const T*> less_cmp;
       block_base_pointer pbb = blist.next;
@@ -2149,7 +2149,7 @@ class nest
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear in the number of blocks that contain elements.
-   const_iterator get_iterator(const_pointer p) const
+   const_iterator get_iterator(const_pointer p) const BOOST_NOEXCEPT
    {
       return const_cast<nest*>(this)->get_iterator(p);
    }
