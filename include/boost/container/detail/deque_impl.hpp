@@ -1084,6 +1084,8 @@ class deque_base
       if (!allocated)
          return;
 
+      //Compute the offset before old_map is deallocated
+      const std::size_t start_off = std::size_t(start_node - old_map);
       boost::container::move_n(start_node, new_map_size, new_map);
       this->prot_deallocate_nodes_if_reservable(old_map, start_node);
       this->prot_deallocate_nodes_if_reservable(end_node, old_map + difference_type(old_map_size));
@@ -1092,7 +1094,7 @@ class deque_base
       this->members_.m_map = new_map;
       this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
       //The start node moves to the first slot: unsigned wrap-around subtracts the offset
-      this->prot_shift_nodes(std::size_t(0u) - std::size_t(start_node - old_map));
+      this->prot_shift_nodes(std::size_t(0u) - start_off);
    }
 
    enum { InitialMapSize = 4 };
