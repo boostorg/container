@@ -544,7 +544,7 @@ struct allocator_traits
    //! <b>Returns</b>: <code>a.deallocate(p, n)</code>
    //!
    //! <b>Throws</b>: Nothing
-   inline static void deallocate(Allocator &a, pointer p, size_type n)
+   inline static void deallocate(Allocator &a, pointer p, size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {  a.deallocate(p, n);  }
 
    //! <b>Effects</b>: calls <code>a.allocate(n, p)</code> if that call is well-formed;

@@ -538,6 +538,18 @@ void test_destroy_pointer_value_type()
    }
 }
 
+//deallocate cannot throw, also if the deallocate member of the allocator is not noexcept
+void test_deallocate_noexcept()
+{
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   typedef boost::container::allocator_traits< SimpleAllocator<int> >   simple_traits;
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<SimpleAllocator<int>&>().deallocate(declval<int*>(), 1u)) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(simple_traits::deallocate(declval<SimpleAllocator<int>&>(), declval<int*>(), 1u)) ));
+   #endif
+}
+
+
 int main()
 {
    using namespace boost::container::dtl;
@@ -782,6 +794,7 @@ int main()
    test_inherited_members();
    test_default_init_unconstrained_construct();
    test_destroy_pointer_value_type();
+   test_deallocate_noexcept();
 
    return ::boost::report_errors();
 }
