@@ -56,25 +56,19 @@ bool mark_on_destructor::destroyed = false;
 #include <boost/container/vector.hpp>
 #include <boost/container/detail/pair.hpp>
 
-#ifndef BOOST_NO_EXCEPTIONS
-
-//The destructor throws if throw_on_destroy is set
+//The destructor is not noexcept, but it does not throw
 struct throwing_dtor
 {
-   static bool throw_on_destroy;
-
-   //Not a throw expression in the destructor: GCC warns about it in C++03 (-Wc++11-compat)
-   static void do_throw()
-   {  throw int(1);  }
+   static unsigned destructor_calls;
 
    ~throwing_dtor() BOOST_NOEXCEPT_IF(false)
-   {  if(throw_on_destroy) do_throw();  }
+   {  ++destructor_calls;  }
 };
 
-bool throwing_dtor::throw_on_destroy = false;
+unsigned throwing_dtor::destructor_calls = 0u;
 
-//destroy calls allocator_traits<OUTERMOST>::destroy: it is noexcept only if that call is,
-//and the exception of the destructor reaches the caller
+//destroy calls allocator_traits<OUTERMOST>::destroy: it is noexcept also if
+//the destructor of T is not noexcept
 void test_destroy_throwing_destructor()
 {
    using namespace boost::container;
@@ -82,33 +76,18 @@ void test_destroy_throwing_destructor()
    typedef scoped_allocator_adaptor< propagation_test_allocator<throwing_dtor, 0> > throwing_scoped;
    #if !defined(BOOST_NO_CXX11_NOEXCEPT)
    using boost::move_detail::declval;
-   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<int_scoped&>().destroy(declval<int*>())) ));
-   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_scoped&>().destroy(declval<throwing_dtor*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<int_scoped&>().destroy(declval<int*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<throwing_scoped&>().destroy(declval<throwing_dtor*>())) ));
    #endif
 
    union storage_t {  char c[sizeof(throwing_dtor)]; double d;  } storage;
    throwing_dtor *const p = ::new(static_cast<void*>(&storage)) throwing_dtor;
-   throwing_dtor::throw_on_destroy = true;
-   bool thrown = false;
+   throwing_dtor::destructor_calls = 0u;
    throwing_scoped sa;
-   BOOST_CONTAINER_TRY{
-      sa.destroy(p);
-   }
-   BOOST_CONTAINER_CATCH(int){
-      thrown = true;
-   }
-   BOOST_CONTAINER_CATCH_END
-   throwing_dtor::throw_on_destroy = false;
-   BOOST_TEST(thrown);
+   sa.destroy(p);
+   BOOST_TEST(throwing_dtor::destructor_calls == 1u);
    (void)sizeof(int_scoped);
 }
-
-#else
-
-void test_destroy_throwing_destructor()
-{}
-
-#endif   //BOOST_NO_EXCEPTIONS
 
 //The constructors (except the default constructor), the accessors, deallocate and
 //the comparison operators cannot throw. Rebound has the same inner allocators as

@@ -811,10 +811,9 @@ class scoped_allocator_adaptor
    //! <b>Effects</b>:
    //!   calls <code>OUTERMOST_ALLOC_TRAITS(*this):: destroy(OUTERMOST(*this), p)</code>.
    //!
-   //! <b>Throws</b>: If that call throws. It is noexcept if that call is noexcept.
+   //! <b>Throws</b>: Nothing.
    template <class T>
-   inline void destroy(T* p)
-      BOOST_NOEXCEPT_IF((dtl::is_nothrow_allocator_destroy<typename outermost_allocator<OuterAlloc>::type, T>::value))
+   inline void destroy(T* p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       allocator_traits<typename outermost_allocator<OuterAlloc>::type>
          ::destroy(get_outermost_allocator(this->outer_allocator()), p);

@@ -309,7 +309,7 @@ class NothrowDestroyAllocator
 };
 
 //allocator_traits::destroy calls a.destroy(p) if the allocator has that member and
-//p->~T() otherwise. It is noexcept only if the expression that runs is.
+//p->~T() otherwise. It is always noexcept.
 void test_destroy_dispatch()
 {
    typedef boost::container::allocator_traits< SimpleAllocator<int> >          no_member_traits;
@@ -318,7 +318,7 @@ void test_destroy_dispatch()
    #if !defined(BOOST_NO_CXX11_NOEXCEPT)
    using boost::move_detail::declval;
    BOOST_CONTAINER_STATIC_ASSERT((  noexcept(no_member_traits::destroy(declval<SimpleAllocator<int>&>(), declval<int*>())) ));
-   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(member_traits::destroy(declval<ComplexAllocator<int>&>(), declval<int*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(member_traits::destroy(declval<ComplexAllocator<int>&>(), declval<int*>())) ));
    BOOST_CONTAINER_STATIC_ASSERT((  noexcept(nothrow_member_traits::destroy(declval<NothrowDestroyAllocator<int>&>(), declval<int*>())) ));
    #endif
    int i = 0;
@@ -330,60 +330,40 @@ void test_destroy_dispatch()
    (void)sizeof(member_traits);
 }
 
-#ifndef BOOST_NO_EXCEPTIONS
-
-//The destructor throws if throw_on_destroy is set
+//The destructor is not noexcept, but it does not throw
 struct throwing_dtor
 {
-   static bool throw_on_destroy;
-
-   //Not a throw expression in the destructor: GCC warns about it in C++03 (-Wc++11-compat)
-   static void do_throw()
-   {  throw int(1);  }
+   static unsigned destructor_calls;
 
    ~throwing_dtor() BOOST_NOEXCEPT_IF(false)
-   {  if(throw_on_destroy) do_throw();  }
+   {  ++destructor_calls;  }
 };
 
-bool throwing_dtor::throw_on_destroy = false;
+unsigned throwing_dtor::destructor_calls = 0u;
 
-//Without a destroy member, the exception of the destructor reaches the caller.
-//With a noexcept destroy member, the destructor is not called by allocator_traits.
+//destroy is noexcept also if the destructor of T is not noexcept. With a destroy
+//member, the destructor is not called by allocator_traits.
 void test_destroy_throwing_destructor()
 {
    typedef boost::container::allocator_traits< SimpleAllocator<throwing_dtor> >          no_member_traits;
    typedef boost::container::allocator_traits< NothrowDestroyAllocator<throwing_dtor> >  nothrow_member_traits;
    #if !defined(BOOST_NO_CXX11_NOEXCEPT)
    using boost::move_detail::declval;
-   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(no_member_traits::destroy(declval<SimpleAllocator<throwing_dtor>&>(), declval<throwing_dtor*>())) ));
-   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(nothrow_member_traits::destroy(declval<NothrowDestroyAllocator<throwing_dtor>&>(), declval<throwing_dtor*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(no_member_traits::destroy(declval<SimpleAllocator<throwing_dtor>&>(), declval<throwing_dtor*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_member_traits::destroy(declval<NothrowDestroyAllocator<throwing_dtor>&>(), declval<throwing_dtor*>())) ));
    #endif
 
    union storage_t {  char c[sizeof(throwing_dtor)]; double d;  } storage;
    throwing_dtor *const p = ::new(static_cast<void*>(&storage)) throwing_dtor;
-   throwing_dtor::throw_on_destroy = true;
+   throwing_dtor::destructor_calls = 0u;
    NothrowDestroyAllocator<throwing_dtor> na;
    nothrow_member_traits::destroy(na, p);
    BOOST_TEST(na.destroy_called_);
-   bool thrown = false;
+   BOOST_TEST(throwing_dtor::destructor_calls == 0u);
    SimpleAllocator<throwing_dtor> a;
-   BOOST_CONTAINER_TRY{
-      no_member_traits::destroy(a, p);
-   }
-   BOOST_CONTAINER_CATCH(int){
-      thrown = true;
-   }
-   BOOST_CONTAINER_CATCH_END
-   throwing_dtor::throw_on_destroy = false;
-   BOOST_TEST(thrown);
+   no_member_traits::destroy(a, p);
+   BOOST_TEST(throwing_dtor::destructor_calls == 1u);
 }
-
-#else
-
-void test_destroy_throwing_destructor()
-{}
-
-#endif   //BOOST_NO_EXCEPTIONS
 
 //max_size and select_on_container_copy_construction are inherited from a
 //base class, and max_size does not return size_type
