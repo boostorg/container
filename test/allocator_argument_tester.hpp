@@ -34,45 +34,46 @@ class propagation_test_allocator
    typedef boost::container::dtl::bool_<HasTrueTypes>  is_always_equal;
    typedef T value_type;
 
-   propagation_test_allocator()
+   propagation_test_allocator() BOOST_NOEXCEPT_OR_NOTHROW
       : m_move_contructed(false), m_move_assigned(false)
    {}
 
-   propagation_test_allocator(const propagation_test_allocator&)
+   propagation_test_allocator(const propagation_test_allocator&) BOOST_NOEXCEPT_OR_NOTHROW
       : m_move_contructed(false), m_move_assigned(false)
    {}
 
-   propagation_test_allocator(BOOST_RV_REF(propagation_test_allocator) )
+   propagation_test_allocator(BOOST_RV_REF(propagation_test_allocator) ) BOOST_NOEXCEPT_OR_NOTHROW
       : m_move_contructed(true), m_move_assigned(false)
    {}
 
    template<class U>
-   propagation_test_allocator(BOOST_RV_REF_BEG propagation_test_allocator<U, Id, HasTrueTypes> BOOST_RV_REF_END)
+   propagation_test_allocator(BOOST_RV_REF_BEG propagation_test_allocator<U, Id, HasTrueTypes> BOOST_RV_REF_END) BOOST_NOEXCEPT_OR_NOTHROW
       : m_move_contructed(true), m_move_assigned(false)
    {}
 
    template<class U>
-   propagation_test_allocator(const propagation_test_allocator<U, Id, HasTrueTypes> &)
+   propagation_test_allocator(const propagation_test_allocator<U, Id, HasTrueTypes> &) BOOST_NOEXCEPT_OR_NOTHROW
+      : m_move_contructed(false), m_move_assigned(false)
    {}
 
-   propagation_test_allocator & operator=(BOOST_COPY_ASSIGN_REF(propagation_test_allocator))
+   propagation_test_allocator & operator=(BOOST_COPY_ASSIGN_REF(propagation_test_allocator)) BOOST_NOEXCEPT_OR_NOTHROW
    {
       return *this;
    }
 
-   propagation_test_allocator & operator=(BOOST_RV_REF(propagation_test_allocator))
+   propagation_test_allocator & operator=(BOOST_RV_REF(propagation_test_allocator)) BOOST_NOEXCEPT_OR_NOTHROW
    {
       m_move_assigned = true;
       return *this;
    }
 
-   std::size_t max_size() const
+   std::size_t max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return std::size_t(-1);  }
 
    value_type* allocate(std::size_t count)
    {  return boost::container::dtl::operator_new_allocate<value_type>(count);  }
 
-   void deallocate(value_type *ptr, std::size_t n)
+   void deallocate(value_type *ptr, std::size_t n) BOOST_NOEXCEPT_OR_NOTHROW
    {  return boost::container::dtl::operator_delete_deallocate<T>(ptr, n);  }
 
    bool m_move_contructed;
@@ -81,12 +82,12 @@ class propagation_test_allocator
 
 template <class T1, class T2, unsigned int Id, bool HasTrueTypes>
 bool operator==( const propagation_test_allocator<T1, Id, HasTrueTypes>&
-               , const propagation_test_allocator<T2, Id, HasTrueTypes>&)
+               , const propagation_test_allocator<T2, Id, HasTrueTypes>&) BOOST_NOEXCEPT_OR_NOTHROW
 {  return true;   }
 
 template <class T1, class T2, unsigned int Id, bool HasTrueTypes>
 bool operator!=( const propagation_test_allocator<T1, Id, HasTrueTypes>&
-               , const propagation_test_allocator<T2, Id, HasTrueTypes>&)
+               , const propagation_test_allocator<T2, Id, HasTrueTypes>&) BOOST_NOEXCEPT_OR_NOTHROW
 {  return false;   }
 
 //This enum lists the construction options
