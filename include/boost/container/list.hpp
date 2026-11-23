@@ -1015,9 +1015,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(list& x)
-      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
-                               || allocator_traits_type::is_always_equal::value)
+   void swap(list& x) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
                    allocator_traits_type::is_always_equal::value ||
@@ -1416,8 +1414,7 @@ class list
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   inline friend void swap(list& x, list& y)
-       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   inline friend void swap(list& x, list& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

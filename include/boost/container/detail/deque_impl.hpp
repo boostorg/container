@@ -2206,10 +2206,11 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       }
    }
 
-   inline void swap(deque_impl &x)
-      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
-                               || allocator_traits_type::is_always_equal::value)
+   inline void swap(deque_impl &x) BOOST_NOEXCEPT_OR_NOTHROW
    {
+      BOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
+                   allocator_traits_type::is_always_equal::value ||
+                   this->alloc() == x.alloc());
       this->swap_members(x);
       dtl::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;
       dtl::swap_alloc(this->alloc(), x.alloc(), flag);
@@ -2263,8 +2264,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       friend bool operator>=(const deque_impl& x, const deque_impl& y)
    {  return !(x < y);  }
 
-   inline friend void swap(deque_impl& x, deque_impl& y)
-       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   inline friend void swap(deque_impl& x, deque_impl& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

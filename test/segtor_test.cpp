@@ -47,6 +47,7 @@
 
 #include "lightweight_test.hpp"
 #include "unqualified_swap_test.hpp"
+#include "propagation_test_allocator.hpp"
 
 using namespace boost::container;
 
@@ -342,17 +343,20 @@ bool test_reserve_capacity()
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
    < boost::container::segtor<int> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 //The operations that do not allocate memory or move elements cannot throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_are_nothrow
    < boost::container::segtor<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
    < boost::container::segtor<int> >::value));
 //shrink_to_fit only deallocates memory
 BOOST_CONTAINER_STATIC_ASSERT((noexcept(boost::move_detail::declval< boost::container::segtor<int>& >().shrink_to_fit())));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+typedef boost::container::segtor<int, propagation_test_allocator<int, 0> > nonpropagating_segtor_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_segtor_t&>().swap(boost::move_detail::declval<nonpropagating_segtor_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_segtor_t&>(), boost::move_detail::declval<nonpropagating_segtor_t&>())) ));
+#endif
 
 int main ()
 {

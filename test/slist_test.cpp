@@ -28,6 +28,7 @@
 #include "iterator_noexcept_utils.hpp"
 #include "container_noexcept_utils.hpp"
 #include "unqualified_swap_test.hpp"
+#include "propagation_test_allocator.hpp"
 
 using namespace boost::container;
 
@@ -251,17 +252,20 @@ bool test_insert_after_return()
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::forward_container_iterators_are_nothrow
    < boost::container::slist<int> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 //The operations that do not allocate memory or move elements cannot throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_allocator_ops_are_nothrow
    < boost::container::slist<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_basic_ops_are_nothrow
    < boost::container::slist<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
    < boost::container::slist<int> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+typedef boost::container::slist<int, propagation_test_allocator<int, 0> > nonpropagating_slist_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_slist_t&>().swap(boost::move_detail::declval<nonpropagating_slist_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_slist_t&>(), boost::move_detail::declval<nonpropagating_slist_t&>())) ));
+#endif
 
 int main ()
 {

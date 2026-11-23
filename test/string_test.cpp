@@ -2783,20 +2783,6 @@ void test_ctad_with_allocator()
    #endif
 }
 
-//The operations of the iterators cannot throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
-   < boost::container::string >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
-
-//The operations that do not allocate memory or move elements cannot throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_are_nothrow
-   < boost::container::string >::value));
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
-   < boost::container::string >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
-
 //The search functions, compare and the relational operators cannot throw, also
 //the overloads that take a std or boost string view
 template<class S, class SV>
@@ -2891,6 +2877,27 @@ void test_string_search_noexcept_all()
    test_string_search_noexcept<boost::container::wstring, std::wstring_view>();
    #endif
 }
+
+//The operations of the iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
+   < boost::container::string >::value));
+
+//The operations that do not allocate memory or move elements cannot throw
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_are_nothrow
+   < boost::container::string >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
+   < boost::container::string >::value));
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+typedef boost::container::basic_string
+   < char, std::char_traits<char>
+   , boost::container::test::propagation_test_allocator<char, false, false, false, false, true> > nonpropagating_string_t;
+BOOST_CONTAINER_STATIC_ASSERT(( !boost::container::allocator_traits<nonpropagating_string_t::allocator_type>::propagate_on_container_swap::value ));
+BOOST_CONTAINER_STATIC_ASSERT(( !boost::container::allocator_traits<nonpropagating_string_t::allocator_type>::is_always_equal::value ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_string_t&>().swap(boost::move_detail::declval<nonpropagating_string_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_string_t&>(), boost::move_detail::declval<nonpropagating_string_t&>())) ));
+#endif
 
 int main()
 {

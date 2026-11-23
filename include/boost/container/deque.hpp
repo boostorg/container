@@ -920,7 +920,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(deque& x);
+   void swap(deque& x) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Erases all the elements of the deque.
    //!
@@ -976,8 +976,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   inline friend void swap(deque& x, deque& y)
-       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   inline friend void swap(deque& x, deque& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  static_cast<base_type&>(x).swap(static_cast<base_type&>(y));  }
 
 };

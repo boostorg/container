@@ -827,7 +827,7 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(segtor& x);
+   void swap(segtor& x) BOOST_NOEXCEPT_OR_NOTHROW;
    #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    //! <b>Effects</b>: Returns true if x and y are equal
@@ -875,8 +875,7 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   inline friend void swap(segtor& x, segtor& y)
-       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   inline friend void swap(segtor& x, segtor& y) BOOST_NOEXCEPT_OR_NOTHROW
    {  static_cast<base_type&>(x).swap(static_cast<base_type&>(y));  }
 
 };
