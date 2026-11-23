@@ -108,17 +108,17 @@ class unsynchronized_pool_resource
    //!   to release all allocated memory. [ Note: memory is released back to
    //!   `upstream_resource()` even if deallocate has not been called for some
    //!   of the allocated blocks. - end note ]
-   void release();
+   void release() BOOST_NOEXCEPT;
 
    //! <b>Returns</b>: The value of the upstream argument provided to the
    //!   constructor of this object.
-   memory_resource* upstream_resource() const;
+   memory_resource* upstream_resource() const BOOST_NOEXCEPT;
 
    //! <b>Returns</b>: The options that control the pooling behavior of this resource.
    //!   The values in the returned struct may differ from those supplied to the pool
    //!   resource constructor in that values of zero will be replaced with
    //!   implementation-defined defaults and sizes may be rounded to unspecified granularity.
-   pool_options options() const;
+   pool_options options() const BOOST_NOEXCEPT;
 
    protected:
 
@@ -211,15 +211,15 @@ inline unsynchronized_pool_resource::unsynchronized_pool_resource(const pool_opt
 inline unsynchronized_pool_resource::~unsynchronized_pool_resource() //virtual
 {}
 
-inline void unsynchronized_pool_resource::release()
+inline void unsynchronized_pool_resource::release() BOOST_NOEXCEPT
 {
    m_resource.release();
 }
 
-inline memory_resource* unsynchronized_pool_resource::upstream_resource() const
+inline memory_resource* unsynchronized_pool_resource::upstream_resource() const BOOST_NOEXCEPT
 {  return m_resource.upstream_resource();  }
 
-inline pool_options unsynchronized_pool_resource::options() const
+inline pool_options unsynchronized_pool_resource::options() const BOOST_NOEXCEPT
 {  return m_resource.options();  }
 
 inline void* unsynchronized_pool_resource::do_allocate(std::size_t bytes, std::size_t alignment) //virtual

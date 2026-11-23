@@ -12,6 +12,7 @@
 #include "lightweight_test.hpp"
 
 #include <boost/intrusive/detail/math.hpp>
+#include <boost/move/detail/meta_utils.hpp>   //declval
 
 #include "derived_from_memory_resource.hpp"
 #include "memory_resource_logger.hpp"
@@ -570,6 +571,18 @@ void test_do_allocate_overaligned()
    BOOST_TEST(mrl.m_info.size() == 0u);
 }
 
+//release, upstream_resource and options cannot throw
+template<class PoolResource>
+void test_noexcept()
+{
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<PoolResource&>().release()) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<const PoolResource&>().upstream_resource()) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<const PoolResource&>().options()) ));
+   #endif
+}
+
 template<class PoolResource>
 void test_pool_resource()
 {
@@ -584,4 +597,5 @@ void test_pool_resource()
    test_do_is_equal<PoolResource>();
    test_release<PoolResource>();
    test_destructor<PoolResource>();
+   test_noexcept<PoolResource>();
 }

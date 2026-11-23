@@ -150,17 +150,17 @@ class pool_resource
    //!   to release all allocated memory. [ Note: memory is released back to
    //!   `upstream_resource()` even if deallocate has not been called for some
    //!   of the allocated blocks. - end note ]
-   void release();
+   void release() BOOST_NOEXCEPT;
 
    //! <b>Returns</b>: The value of the upstream argument provided to the
    //!   constructor of this object.
-   memory_resource* upstream_resource() const;
+   memory_resource* upstream_resource() const BOOST_NOEXCEPT;
 
    //! <b>Returns</b>: The options that control the pooling behavior of this resource.
    //!   The values in the returned struct may differ from those supplied to the pool
    //!   resource constructor in that values of zero will be replaced with
    //!   implementation-defined defaults and sizes may be rounded to unspecified granularity.
-   pool_options options() const;
+   pool_options options() const BOOST_NOEXCEPT;
 
    public:  //public so that [un]synchronized_pool_resource can use them
 
@@ -257,7 +257,7 @@ class pool_data_t
       slist_algo::link_after(&free_slist, pv);
    }
 
-   void release(memory_resource &upstream)
+   void release(memory_resource &upstream) BOOST_NOEXCEPT
    {
       slist_algo::init_header(&free_slist);
       this->block_slist::release(upstream);
@@ -389,7 +389,7 @@ inline pool_resource::~pool_resource()
    }
 }
 
-inline void pool_resource::release()
+inline void pool_resource::release() BOOST_NOEXCEPT
 {
    m_oversized_list.release(m_upstream);
    for(std::size_t i = 0, max = m_pool_count; i != max; ++i)
@@ -398,10 +398,10 @@ inline void pool_resource::release()
    }
 }
 
-inline memory_resource* pool_resource::upstream_resource() const
+inline memory_resource* pool_resource::upstream_resource() const BOOST_NOEXCEPT
 {  return &m_upstream;  }
 
-inline pool_options pool_resource::options() const
+inline pool_options pool_resource::options() const BOOST_NOEXCEPT
 {  return m_options; }
 
 inline void* pool_resource::do_allocate(std::size_t bytes, std::size_t alignment)

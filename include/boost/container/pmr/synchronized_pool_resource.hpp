@@ -96,13 +96,13 @@ class synchronized_pool_resource
    ~synchronized_pool_resource() BOOST_OVERRIDE;
 
    //! @copydoc ::boost::container::pmr::unsynchronized_pool_resource::release()
-   void release();
+   void release() BOOST_NOEXCEPT;
 
    //! @copydoc ::boost::container::pmr::unsynchronized_pool_resource::upstream_resource()const
-   memory_resource* upstream_resource() const;
+   memory_resource* upstream_resource() const BOOST_NOEXCEPT;
 
    //! @copydoc ::boost::container::pmr::unsynchronized_pool_resource::options()const
-   pool_options options() const;
+   pool_options options() const BOOST_NOEXCEPT;
 
    protected:
 
@@ -182,16 +182,16 @@ inline synchronized_pool_resource::synchronized_pool_resource(const pool_options
 inline synchronized_pool_resource::~synchronized_pool_resource() //virtual
 {}
 
-inline void synchronized_pool_resource::release()
+inline void synchronized_pool_resource::release() BOOST_NOEXCEPT
 {
    sync_pr_dtl::mutex_lock lck(m_mut); (void)lck;
    m_pool_resource.release();
 }
 
-inline memory_resource* synchronized_pool_resource::upstream_resource() const
+inline memory_resource* synchronized_pool_resource::upstream_resource() const BOOST_NOEXCEPT
 {  return m_pool_resource.upstream_resource();  }
 
-inline pool_options synchronized_pool_resource::options() const
+inline pool_options synchronized_pool_resource::options() const BOOST_NOEXCEPT
 {  return m_pool_resource.options();  }
 
 inline void* synchronized_pool_resource::do_allocate(std::size_t bytes, std::size_t alignment) //virtual
