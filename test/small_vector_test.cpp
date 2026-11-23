@@ -772,6 +772,9 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_
    < boost::container::small_vector<int, 4> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
    < boost::container::small_vector<int, 4> >::value));
+//The constructor from an allocator does not allocate memory
+BOOST_CONTAINER_STATIC_ASSERT((noexcept(boost::container::small_vector<int, 4>
+   (boost::move_detail::declval<const boost::container::small_vector<int, 4>::allocator_type&>()))));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 //shrink_to_fit() called through small_vector_base must not leave the in-place storage

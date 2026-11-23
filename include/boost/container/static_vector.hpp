@@ -369,7 +369,7 @@ public:
        : base_t(BOOST_MOVE_BASE(base_t, other))
     {}
 
-    inline explicit static_vector(const allocator_type &)
+    inline explicit static_vector(const allocator_type &) BOOST_NOEXCEPT_OR_NOTHROW
        : base_t()
     {}
 

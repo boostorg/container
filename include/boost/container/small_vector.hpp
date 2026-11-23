@@ -900,7 +900,7 @@ class small_vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   inline explicit small_vector(const allocator_type &a)
+   inline explicit small_vector(const allocator_type &a) BOOST_NOEXCEPT_OR_NOTHROW
       : base_type(initial_capacity_t(), internal_capacity(), a)
    {}
 
