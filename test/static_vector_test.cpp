@@ -874,11 +874,9 @@ void test_count_value_constructor()
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
    < boost::container::static_vector<int, 4> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 //The operations that do not allocate memory cannot throw. erase cannot throw
 //if the move assignment of the element cannot throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_basic_ops_are_nothrow
    < boost::container::static_vector<int, 4> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_reverse_ops_are_nothrow
@@ -887,7 +885,25 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothro
    < boost::container::static_vector<int, 4> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((noexcept(boost::container::static_vector<int, 4>
    (boost::move_detail::declval<const boost::container::static_vector<int, 4>::allocator_type&>()))));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//The copy operations and swap can throw only if the operations of the elements can throw
+typedef boost::container::static_vector<int, 4> nothrow_svec_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_svec_t(boost::move_detail::declval<const nothrow_svec_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_svec_t(boost::move_detail::declval<const nothrow_svec_t&>(), boost::move_detail::declval<const nothrow_svec_t::allocator_type&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nothrow_svec_t&>() = boost::move_detail::declval<const nothrow_svec_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nothrow_svec_t&>().swap(boost::move_detail::declval<nothrow_svec_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nothrow_svec_t&>(), boost::move_detail::declval<nothrow_svec_t&>())) ));
+#endif
+
+#if !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_EXCEPTIONS)
+typedef boost::container::static_vector<boost::container::test::throwing_copy_value, 4> throwing_copy_svec_t;
+typedef boost::container::static_vector<boost::container::test::throwing_move_ctor_value, 4> throwing_move_svec_t;
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_copy_svec_t(boost::move_detail::declval<const throwing_copy_svec_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_copy_svec_t(boost::move_detail::declval<const throwing_copy_svec_t&>(), boost::move_detail::declval<const throwing_copy_svec_t::allocator_type&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_copy_svec_t&>() = boost::move_detail::declval<const throwing_copy_svec_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_move_svec_t&>().swap(boost::move_detail::declval<throwing_move_svec_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(swap(boost::move_detail::declval<throwing_move_svec_t&>(), boost::move_detail::declval<throwing_move_svec_t&>())) ));
+#endif
 
 int main(int, char* [])
 {

@@ -357,10 +357,12 @@ public:
     //! @par Complexity
     //!   Linear O(N).
     inline static_vector(static_vector const& other)
+       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_copy_constructible<value_type>::value)
         : base_t(other)
     {}
 
     inline static_vector(static_vector const& other, const allocator_type &)
+       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_copy_constructible<value_type>::value)
        : base_t(other)
     {}
 
@@ -431,6 +433,8 @@ public:
     //! @par Complexity
     //! Linear O(N).
     inline static_vector & operator=(BOOST_COPY_ASSIGN_REF(static_vector) other)
+       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_copy_constructible<value_type>::value &&
+                         boost::container::dtl::is_nothrow_copy_assignable<value_type>::value)
     {
         return static_cast<static_vector&>(base_t::operator=(static_cast<base_t const&>(other)));
     }
@@ -524,7 +528,9 @@ public:
     //!
     //! @par Complexity
     //!   Linear O(N).
-    void swap(static_vector & other);
+    void swap(static_vector & other)
+       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_swappable<value_type>::value &&
+                         boost::container::dtl::is_nothrow_move_constructible<value_type>::value);
 
     //! @pre <tt>other.size() <= capacity() && size() <= other.capacity()</tt>
     //!
@@ -1289,6 +1295,15 @@ public:
     //!   Constant O(1).
     bool empty() const BOOST_NOEXCEPT_OR_NOTHROW;
 #else
+
+   //The elements are swapped one by one, so swap can throw only if the swap or
+   //the move constructor of the elements can throw
+   inline void swap(static_vector & other)
+       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_swappable<value_type>::value &&
+                         boost::container::dtl::is_nothrow_move_constructible<value_type>::value)
+   {  this->base_t::swap(other);  }
+
+   using base_t::swap;
 
    inline friend void swap(static_vector &x, static_vector &y)
        BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))

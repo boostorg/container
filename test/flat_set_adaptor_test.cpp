@@ -40,8 +40,21 @@ struct GetSetContainer
    };
 };
 
+//An element whose move constructor can throw (it is a copy constructor that is not noexcept)
+struct throwing_move_int
+{
+   throwing_move_int(int v = 0) : m_v(v) {}
+   throwing_move_int(const throwing_move_int &o) : m_v(o.m_v) {}
+   throwing_move_int &operator=(const throwing_move_int &o)
+   {  m_v = o.m_v; return *this;  }
+   friend bool operator<(const throwing_move_int &l, const throwing_move_int &r)
+   {  return l.m_v < r.m_v;  }
+   int m_v;
+};
+
 //swap is noexcept if the swaps of the comparator and of the sequence are:
-//static_vector swaps element by element
+//static_vector swaps element by element, so its swap can throw only
+//if the swap or the move constructor of the element can throw
 void test_swap_noexcept()
 {
    #if !defined(BOOST_NO_CXX11_NOEXCEPT)
@@ -49,11 +62,14 @@ void test_swap_noexcept()
    using boost::container::dtl::is_nothrow_swappable;
    typedef flat_set<int> plain_t;
    typedef flat_set<int, std::less<int>, static_vector<int, 8> > static_t;
+   typedef flat_set<throwing_move_int, std::less<throwing_move_int>, static_vector<throwing_move_int, 8> > throwing_static_t;
    BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<plain_t&>().swap(declval<plain_t&>())) ));
    BOOST_CONTAINER_STATIC_ASSERT((  is_nothrow_swappable<plain_t>::value ));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<static_t&>().swap(declval<static_t&>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  is_nothrow_swappable<static_t>::value ));
    #if defined(BOOST_MOVE_TT_CXX11_IS_NOTHROW_SWAPPABLE)
-   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<static_t&>().swap(declval<static_t&>())) ));
-   BOOST_CONTAINER_STATIC_ASSERT(( !is_nothrow_swappable<static_t>::value ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_static_t&>().swap(declval<throwing_static_t&>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !is_nothrow_swappable<throwing_static_t>::value ));
    #endif
    #endif
 }
