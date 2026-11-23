@@ -1846,6 +1846,7 @@ class flat_map
    //!
    //! <b>Throws</b>: If secuence_type's move constructor throws 
    BOOST_CONTAINER_NODISCARD inline sequence_type extract_sequence()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value)
    {
       return boost::move(BOOST_CONTAINER_FORCE(sequence_type, m_flat_tree.get_sequence_ref()));
    }
@@ -3294,6 +3295,7 @@ class flat_multimap
    //! <b>Throws</b>: If secuence_type's move constructor throws 
    BOOST_CONTAINER_NODISCARD inline
       sequence_type extract_sequence()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value)
    {  return boost::move(BOOST_CONTAINER_FORCE(sequence_type, m_flat_tree.get_sequence_ref()));   }
 
    //! <b>Effects</b>: Discards the internally hold sequence container and adopts the

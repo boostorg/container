@@ -1186,7 +1186,8 @@ class flat_set
    //! <b>Postcondition</b>: this->empty()
    //!
    //! <b>Throws</b>: If sequence_type's move constructor throws 
-   sequence_type extract_sequence();
+   sequence_type extract_sequence()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value);
 
    #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1964,7 +1965,8 @@ class flat_multiset
    //! <b>Postcondition</b>: this->empty()
    //!
    //! <b>Throws</b>: If secuence_type's move constructor throws 
-   sequence_type extract_sequence();
+   sequence_type extract_sequence()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<sequence_type>::value);
 
    #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 

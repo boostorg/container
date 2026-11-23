@@ -1793,6 +1793,7 @@ class flat_tree
 
    BOOST_CONTAINER_NODISCARD inline
       container_type extract_sequence()
+         BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<container_type>::value)
    {  return boost::move(m_data.m_seq);   }
 
    BOOST_CONTAINER_NODISCARD inline

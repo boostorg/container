@@ -396,6 +396,44 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothro
    < boost::container::flat_multimap<int, int> >::value));
 #endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
+#if !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+//A sequence with a move constructor that is not noexcept
+template<class T>
+class throwing_move_vector
+   : public boost::container::vector<T>
+{
+   typedef boost::container::vector<T> base_t;
+
+   public:
+   throwing_move_vector()
+   {}
+
+   throwing_move_vector(const throwing_move_vector &x)
+      : base_t(x)
+   {}
+
+   throwing_move_vector(throwing_move_vector &&x) noexcept(false)
+      : base_t(boost::move(static_cast<base_t&>(x)))
+   {}
+
+   throwing_move_vector& operator=(const throwing_move_vector &x)
+   {  base_t::operator=(x); return *this;  }
+
+   throwing_move_vector& operator=(throwing_move_vector &&x)
+   {  base_t::operator=(boost::move(static_cast<base_t&>(x))); return *this;  }
+};
+
+//extract_sequence cannot throw if the move constructor of the sequence cannot throw
+typedef boost::container::flat_map<int, int, std::less<int>, throwing_move_vector<std::pair<int, int> > >       throwing_flat_map_t;
+typedef boost::container::flat_multimap<int, int, std::less<int>, throwing_move_vector<std::pair<int, int> > >  throwing_flat_multimap_t;
+BOOST_CONTAINER_STATIC_ASSERT((  noexcept(boost::move_detail::declval<boost::container::flat_map<int, int>&>().extract_sequence()) ));
+BOOST_CONTAINER_STATIC_ASSERT((  noexcept(boost::move_detail::declval<boost::container::flat_multimap<int, int>&>().extract_sequence()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_flat_map_t&>().extract_sequence()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_flat_multimap_t&>().extract_sequence()) ));
+
+#endif
+
 int main()
 {
    if(!test_unqualified_swap())
