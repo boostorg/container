@@ -508,6 +508,7 @@ template<class SequenceContainer>   // has_capacity == true
 inline typename SequenceContainer::size_type
    flat_tree_capacity(const SequenceContainer &tseq, dtl::true_)
 {
+   (void)tseq;
    return tseq.capacity();
 }
 

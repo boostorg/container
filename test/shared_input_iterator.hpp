@@ -219,6 +219,7 @@ class shared_input_range
    ~shared_input_range()
    {
       T *const p = this->data();
+      (void)p; //Some compilers warns p is unreferenced if T has a trivial destructor
       for(std::size_t i = 0; i != N; ++i){
          p[i].~T();
       }

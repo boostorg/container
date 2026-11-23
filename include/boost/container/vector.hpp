@@ -2964,6 +2964,7 @@ private:
    template<bool Propagate>
    void priv_prepare_storage_for_assign(dtl::bool_<Propagate>, const allocator_type &new_alloc, pointer default_storage, size_type default_capacity)
    {
+      (void)new_alloc;
       if(Propagate && !(this->m_holder.alloc() == new_alloc)){
          this->clear();
          const pointer p = this->m_holder.start();
