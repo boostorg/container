@@ -792,7 +792,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
       this->priv_deep_swap(x);
    }
 
-   inline void swap_resources(vector_alloc_holder &) BOOST_NOEXCEPT_OR_NOTHROW
+   inline void swap_resources(vector_alloc_holder &)
    {  //Containers with version 0 allocators can't be moved without moving elements one by one
       on_capacity_overflow();
    }
@@ -2444,14 +2444,13 @@ private:
    //! <b>Complexity</b>: Constant.
    inline void swap(vector& x)
       #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-      //A version 0 allocator (static_vector) stores the elements in itself, so
-      //the elements are swapped one by one
-      BOOST_NOEXCEPT_IF( ((allocator_traits_type::propagate_on_container_swap::value
-                                    || allocator_traits_type::is_always_equal::value) &&
-                                    !dtl::is_version<allocator_type, 0>::value))
+      //A version 0 allocator (static_vector) stores the elements in itself and a
+      //partially propagable allocator (small_vector) can store them in an internal
+      //buffer, so the elements can be swapped one by one
+      BOOST_NOEXCEPT_IF( (!dtl::is_version<allocator_type, 0>::value &&
+                          !allocator_traits_type::is_partially_propagable::value))
       #else
-      BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
-                      || allocator_traits_type::is_always_equal::value)
+      BOOST_NOEXCEPT_OR_NOTHROW
       #endif
    {
       this->priv_swap(x, dtl::bool_<dtl::is_version<allocator_type, 0>::value>());

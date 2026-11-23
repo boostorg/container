@@ -33,6 +33,7 @@
 #include "container_noexcept_utils.hpp"
 #include "throwing_utilities.hpp"
 #include "unqualified_swap_test.hpp"
+#include "propagation_test_allocator.hpp"
 
 using namespace boost::container;
 
@@ -473,26 +474,6 @@ bool test_range_of_convertible_pairs()
    return true;
 }
 
-//The operations of the iterators cannot throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
-   < boost::container::map<int, int> >::value));
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
-   < boost::container::multimap<int, int> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
-
-//The accessors, clear, erase and extract cannot throw, also with a comparator
-//whose copy can throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
-   < boost::container::map<int, int> >::value));
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
-   < boost::container::multimap<int, int> >::value));
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
-   < boost::container::map<int, int, boost::container::test::copy_assign_counting_less<int> > >::value));
-BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
-   < boost::container::multimap<int, int, boost::container::test::copy_assign_counting_less<int> > >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 //The hint version returns an iterator and, if the insertion fails, nh keeps the node.
 //With BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE it returns
@@ -546,6 +527,30 @@ bool test_node_type_hint_insert()
    return true;
    #endif
 }
+
+//The operations of the iterators cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
+   < boost::container::map<int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::bidirectional_container_iterators_are_nothrow
+   < boost::container::multimap<int, int> >::value));
+
+//The accessors, clear, erase and extract cannot throw, also with a comparator
+//whose copy can throw
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::map<int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::multimap<int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::map<int, int, boost::container::test::copy_assign_counting_less<int> > >::value));
+BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::tree_container_ops_are_nothrow
+   < boost::container::multimap<int, int, boost::container::test::copy_assign_counting_less<int> > >::value));
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+typedef boost::container::map<int, int, std::less<int>, propagation_test_allocator<std::pair<const int, int>, 0> > nonpropagating_map_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_map_t&>().swap(boost::move_detail::declval<nonpropagating_map_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_map_t&>(), boost::move_detail::declval<nonpropagating_map_t&>())) ));
+#endif
 
 int main ()
 {

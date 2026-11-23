@@ -888,9 +888,11 @@ class tree
    {  return AllocHolder::max_size();  }
 
    inline void swap(ThisType& x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<Compare>::value )
    {
+      BOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
+                   allocator_traits_type::is_always_equal::value ||
+                   this->node_alloc() == x.node_alloc());
       //Tag dispatch instead of BOOST_IF_CONSTEXPR: a rethrow in the body of
       //a noexcept function triggers -Wterminate even if it is never executed
       this->priv_swap(x, dtl::bool_<boost::container::dtl::is_nothrow_swappable<Compare>::value>());
@@ -1654,8 +1656,7 @@ class tree
    {  return !(x < y);  }
 
    inline friend void swap(tree& x, tree& y)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<Compare>::value )
    {  x.swap(y);  }
 };
 

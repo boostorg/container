@@ -35,6 +35,7 @@
 #include "iterator_noexcept_utils.hpp"
 #include "container_noexcept_utils.hpp"
 #include "unqualified_swap_test.hpp"
+#include "propagation_test_allocator.hpp"
 
 using namespace boost::container;
 
@@ -259,18 +260,21 @@ bool test_unqualified_swap()
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
    < boost::container::vector<int> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 
 //The operations that do not allocate memory cannot throw. erase cannot throw
 //if the move assignment of the element cannot throw
-#if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::reversible_container_ops_are_nothrow
    < boost::container::vector<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothrow
    < boost::container::vector<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((!boost::container::test::container_erase_is_nothrow
    < boost::container::vector<boost::container::test::throwing_move_assign_value> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+typedef boost::container::vector<int, propagation_test_allocator<int, 0> > nonpropagating_vector_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_vector_t&>().swap(boost::move_detail::declval<nonpropagating_vector_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_vector_t&>(), boost::move_detail::declval<nonpropagating_vector_t&>())) ));
+#endif
 
 int main()
 {

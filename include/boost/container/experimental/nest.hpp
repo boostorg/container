@@ -1929,9 +1929,7 @@ class nest
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(nest& x)
-      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
-                                  || allocator_traits_type::is_always_equal::value)
+   void swap(nest& x) BOOST_NOEXCEPT
    {
       BOOST_STATIC_CONSTEXPR bool pocs_val =
          allocator_traits_type::propagate_on_container_swap::value;

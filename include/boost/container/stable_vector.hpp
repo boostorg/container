@@ -1923,9 +1923,7 @@ class stable_vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(stable_vector & x)
-      BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
-                                || allocator_traits_type::is_always_equal::value)
+   void swap(stable_vector & x) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
                    allocator_traits_type::is_always_equal::value ||

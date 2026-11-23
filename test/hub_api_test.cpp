@@ -18,6 +18,7 @@ int main() { return 0; }
 #include <boost/config/workaround.hpp>
 #include <boost/container/hub.hpp>
 #include "allocator_test.hpp"
+#include "propagation_test_allocator.hpp"
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/pmr/hub.hpp>
 #include <boost/container/throw_exception.hpp>
@@ -784,7 +785,12 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_basic_ops_are_n
    < boost::container::hub<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_reverse_ops_are_nothrow
    < boost::container::hub<int> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+typedef boost::container::hub<int, propagation_test_allocator<int, 0> > nonpropagating_hub_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_hub_t&>().swap(boost::move_detail::declval<nonpropagating_hub_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_hub_t&>(), boost::move_detail::declval<nonpropagating_hub_t&>())) ));
+#endif
 
 int main()
 {

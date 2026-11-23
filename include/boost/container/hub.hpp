@@ -1542,10 +1542,7 @@ public:
    //!   of x.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(hub& x)
-      noexcept(
-         hub_detail::pocs_t<allocator_type>::value ||
-         hub_detail::is_always_equal_t<allocator_type>::value)
+   void swap(hub& x) noexcept
    {
       using pocs = hub_detail::pocs_t<allocator_type>;
 

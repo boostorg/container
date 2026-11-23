@@ -15,6 +15,7 @@
 
 #include <boost/container/experimental/nest.hpp>
 #include "allocator_test.hpp"
+#include "propagation_test_allocator.hpp"
 #include <boost/container/new_allocator.hpp>
 #include "lightweight_test.hpp"
 #include <boost/core/pointer_traits.hpp>
@@ -985,6 +986,13 @@ void test_move_with_unequal_allocators()
 //                                  main
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+typedef boost::container::nest<int, propagation_test_allocator<int, 0> > nonpropagating_nest_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_nest_t&>().swap(boost::move_detail::declval<nonpropagating_nest_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_nest_t&>(), boost::move_detail::declval<nonpropagating_nest_t&>())) ));
+#endif
 
 int main()
 {

@@ -50,6 +50,7 @@
 #include "iterator_noexcept_utils.hpp"
 #include "container_noexcept_utils.hpp"
 #include "unqualified_swap_test.hpp"
+#include "propagation_test_allocator.hpp"
 #include "throwing_utilities.hpp"
 
 using namespace boost::container;
@@ -4053,7 +4054,12 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothro
    < boost::container::devector<int> >::value));
 BOOST_CONTAINER_STATIC_ASSERT((!boost::container::test::container_erase_is_nothrow
    < boost::container::devector<boost::container::test::throwing_move_assign_value> >::value));
-#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+//swap cannot throw, also with an allocator that is not propagated on swap and is not always equal
+typedef boost::container::devector<int, propagation_test_allocator<int, 0> > nonpropagating_devector_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_devector_t&>().swap(boost::move_detail::declval<nonpropagating_devector_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_devector_t&>(), boost::move_detail::declval<nonpropagating_devector_t&>())) ));
+#endif
 
 int main()
 {

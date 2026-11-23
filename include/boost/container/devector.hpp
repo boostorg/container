@@ -2505,21 +2505,18 @@ class devector
    *
    * **Effects**: exchanges the contents of `*this` and `b`.
    *
-   * **Requires**: instances of `T` must be swappable by unqualified call of `swap`
-   * and `T` must be [MoveInsertable] into `*this`.
-   *
    * **Precondition**: The allocators should allow propagation or should compare equal.
    *
-   * **Exceptions**: Basic exceptions guarantee if not `noexcept`.
+   * **Throws**: Nothing.
    *
    * **Complexity**: Constant.
    */
-   void swap(devector& b)
-      BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
-                                 || allocator_traits_type::is_always_equal::value)
+   void swap(devector& b) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONSTEXPR_OR_CONST bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
-      BOOST_ASSERT(propagate_alloc || static_cast<allocator_type&>(*this) == static_cast<allocator_type&>(b)); // else it's undefined behavior
+      BOOST_ASSERT(propagate_alloc ||
+                   allocator_traits_type::is_always_equal::value ||
+                   static_cast<allocator_type&>(*this) == static_cast<allocator_type&>(b)); // else it's undefined behavior
 
       swap_big_big(*this, b);
 
@@ -2576,9 +2573,7 @@ class devector
       friend bool operator>=(const devector& x, const devector& y)
    {   return !(x < y);   }
 
-   inline friend void swap(devector& x, devector& y)
-      BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
-                                 || allocator_traits_type::is_always_equal::value)
+   inline friend void swap(devector& x, devector& y) BOOST_NOEXCEPT_OR_NOTHROW
    {   x.swap(y);   }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

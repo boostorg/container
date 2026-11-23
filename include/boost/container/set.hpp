@@ -838,13 +838,11 @@ class set
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: If the swap of the comparison objects throws. It is noexcept
-   //!   if allocator_traits_type::is_always_equal::value is true and the swap of
-   //!   Compare is noexcept.
+   //!   if the swap of Compare is noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    void swap(set& x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: erase(begin(),end()).
    //!
@@ -1693,8 +1691,7 @@ class multiset
 
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::set::clear
    void clear() BOOST_NOEXCEPT_OR_NOTHROW;
