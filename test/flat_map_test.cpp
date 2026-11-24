@@ -32,6 +32,7 @@
 #include "container_noexcept_utils.hpp"
 #include "flat_map_test.hpp"
 #include "unqualified_swap_test.hpp"
+#include "throwing_utilities.hpp"
 
 #include <map>
 #include <utility>
@@ -432,6 +433,16 @@ BOOST_CONTAINER_STATIC_ASSERT((  noexcept(boost::move_detail::declval<boost::con
 BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_flat_map_t&>().extract_sequence()) ));
 BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_flat_multimap_t&>().extract_sequence()) ));
 
+#endif
+
+//key_comp and value_comp can throw only if the copy of the comparator can throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+typedef boost::container::flat_map<int, int> plain_flat_map_t;
+typedef boost::container::flat_map<int, int, boost::container::test::copy_assign_counting_less<int> > copy_less_flat_map_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const plain_flat_map_t&>().key_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<const copy_less_flat_map_t&>().key_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const plain_flat_map_t&>().value_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<const copy_less_flat_map_t&>().value_comp()) ));
 #endif
 
 int main()

@@ -895,10 +895,12 @@ class flat_tree
    // accessors:
    BOOST_CONTAINER_NODISCARD inline
       Compare key_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<Compare>::value)
    { return this->m_data.get_comp(); }
 
    BOOST_CONTAINER_NODISCARD inline
       value_compare value_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<Compare>::value)
    { return this->m_data; }
 
    BOOST_CONTAINER_NODISCARD inline

@@ -1622,6 +1622,7 @@ class flat_map
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
       key_compare key_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value)
       { return BOOST_CONTAINER_FORCECOPY(key_compare, m_flat_tree.key_comp()); }
 
    //! <b>Effects</b>: Returns an object of value_compare constructed out
@@ -1630,6 +1631,7 @@ class flat_map
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
       value_compare value_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value)
       { return value_compare(BOOST_CONTAINER_FORCECOPY(key_compare, m_flat_tree.key_comp())); }
 
    //////////////////////////////////////////////
@@ -3076,6 +3078,7 @@ class flat_multimap
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
       key_compare key_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value)
       { return BOOST_CONTAINER_FORCECOPY(key_compare, m_flat_tree.key_comp()); }
 
    //! <b>Effects</b>: Returns an object of value_compare constructed out
@@ -3084,6 +3087,7 @@ class flat_multimap
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline
       value_compare value_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value)
       { return value_compare(BOOST_CONTAINER_FORCECOPY(key_compare, m_flat_tree.key_comp())); }
 
    //////////////////////////////////////////////

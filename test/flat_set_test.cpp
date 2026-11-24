@@ -37,6 +37,7 @@
 #include "iterator_noexcept_utils.hpp"
 #include "container_noexcept_utils.hpp"
 #include "unqualified_swap_test.hpp"
+#include "throwing_utilities.hpp"
 
 using namespace boost::container;
 
@@ -702,6 +703,16 @@ BOOST_CONTAINER_STATIC_ASSERT((  noexcept(boost::move_detail::declval<boost::con
 BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_flat_set_t&>().extract_sequence()) ));
 BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_flat_multiset_t&>().extract_sequence()) ));
 
+#endif
+
+//key_comp and value_comp can throw only if the copy of the comparator can throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+typedef boost::container::flat_set<int> plain_flat_set_t;
+typedef boost::container::flat_set<int, boost::container::test::copy_assign_counting_less<int> > copy_less_flat_set_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const plain_flat_set_t&>().key_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<const copy_less_flat_set_t&>().key_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const plain_flat_set_t&>().value_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<const copy_less_flat_set_t&>().value_comp()) ));
 #endif
 
 int main()
