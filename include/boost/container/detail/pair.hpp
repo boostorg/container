@@ -153,6 +153,8 @@ struct pair
 
    //Default constructor
    pair()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<T1>::value &&
+                        dtl::is_nothrow_default_constructible<T2>::value)
       : first(), second()
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -163,6 +165,8 @@ struct pair
    pair(const pair& x) = default;
    #else
    pair(const pair& x)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, const T1&>::value &&
+                         dtl::is_nothrow_constructible<T2, const T2&>::value))
       : first(x.first), second(x.second)
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -173,6 +177,8 @@ struct pair
    pair(pair&& p) = default;
    #else
    pair(BOOST_RV_REF(pair) p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, T1>::value &&
+                         dtl::is_nothrow_constructible<T2, T2>::value))
       : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -181,6 +187,8 @@ struct pair
 
    template <class D, class S>
    pair(const pair<D, S> &p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, const D&>::value &&
+                         dtl::is_nothrow_constructible<T2, const S&>::value))
       : first(p.first), second(p.second)
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -188,6 +196,8 @@ struct pair
 
    template <class D, class S>
    pair(BOOST_RV_REF_BEG pair<D, S> BOOST_RV_REF_END p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, D>::value &&
+                         dtl::is_nothrow_constructible<T2, S>::value))
       : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -195,6 +205,8 @@ struct pair
 
    //pair from two values
    pair(const T1 &t1, const T2 &t2)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, const T1&>::value &&
+                         dtl::is_nothrow_constructible<T2, const T2&>::value))
       : first(t1)
       , second(t2)
    {
@@ -203,6 +215,8 @@ struct pair
 
    template<class U, class V>
    pair(BOOST_FWD_REF(U) u, BOOST_FWD_REF(V) v)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, U>::value &&
+                         dtl::is_nothrow_constructible<T2, V>::value))
       : first(::boost::forward<U>(u))
       , second(::boost::forward<V>(v))
    {
@@ -211,6 +225,8 @@ struct pair
 
    //And now compatibility with std::pair
    pair(const std::pair<T1, T2>& x)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, const T1&>::value &&
+                         dtl::is_nothrow_constructible<T2, const T2&>::value))
       : first(x.first), second(x.second)
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -218,12 +234,16 @@ struct pair
 
    template <class D, class S>
    pair(const std::pair<D, S>& p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, const D&>::value &&
+                         dtl::is_nothrow_constructible<T2, const S&>::value))
       : first(p.first), second(p.second)
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
 
    pair(BOOST_RV_REF_BEG std::pair<T1, T2> BOOST_RV_REF_END p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, T1>::value &&
+                         dtl::is_nothrow_constructible<T2, T2>::value))
       : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -231,6 +251,8 @@ struct pair
 
    template <class D, class S>
    pair(BOOST_RV_REF_BEG std::pair<D, S> BOOST_RV_REF_END p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_constructible<T1, D>::value &&
+                         dtl::is_nothrow_constructible<T2, S>::value))
       : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
@@ -369,7 +391,10 @@ struct pair
 
    pair& operator=(const pair& p) requires(!has_reference_member) = default;
 
-   pair& operator=(const pair& p) requires(has_reference_member)
+   pair& operator=(const pair& p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, const T1&>::value &&
+                         dtl::is_nothrow_assignable<T2&, const T2&>::value))
+      requires(has_reference_member)
    {
       first  = p.first;
       second = p.second;
@@ -379,6 +404,8 @@ struct pair
    pair& operator=(const pair& p) = default;
    #else
    pair& operator=(BOOST_COPY_ASSIGN_REF(pair) p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, const T1&>::value &&
+                         dtl::is_nothrow_assignable<T2&, const T2&>::value))
    {
       first  = p.first;
       second = p.second;
@@ -389,7 +416,10 @@ struct pair
    #if defined(BOOST_CONTAINER_HAS_CONDITIONALLY_TRIVIAL_SPECIAL_MEMBERS)
    pair& operator=(pair&& p) requires(!has_reference_member) = default;
 
-   pair& operator=(pair&& p) requires(has_reference_member)
+   pair& operator=(pair&& p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, T1&&>::value &&
+                         dtl::is_nothrow_assignable<T2&, T2&&>::value))
+      requires(has_reference_member)
    {
       first  = ::boost::forward<T1>(p.first);
       second = ::boost::forward<T2>(p.second);
@@ -399,6 +429,8 @@ struct pair
    pair& operator=(pair&& p) = default;
    #else
    pair& operator=(BOOST_RV_REF(pair) p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, T1>::value &&
+                         dtl::is_nothrow_assignable<T2&, T2>::value))
    {
       first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
       second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
@@ -414,6 +446,8 @@ struct pair
       , ::boost::container::dtl::is_same<T2, S>
       >::type
       operator=(const pair<D, S>&p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, const D&>::value &&
+                         dtl::is_nothrow_assignable<T2&, const S&>::value))
    {
       first  = p.first;
       second = p.second;
@@ -427,6 +461,8 @@ struct pair
       , ::boost::container::dtl::is_same<T2, S>
       >::type
       operator=(BOOST_RV_REF_BEG pair<D, S> BOOST_RV_REF_END p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, D>::value &&
+                         dtl::is_nothrow_assignable<T2&, S>::value))
    {
       first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
       second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
@@ -434,6 +470,8 @@ struct pair
    }
 //std::pair copy assignment
    pair& operator=(const std::pair<T1, T2> &p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, const T1&>::value &&
+                         dtl::is_nothrow_assignable<T2&, const T2&>::value))
    {
       first  = p.first;
       second = p.second;
@@ -442,6 +480,8 @@ struct pair
 
    template <class D, class S>
    pair& operator=(const std::pair<D, S> &p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, const D&>::value &&
+                         dtl::is_nothrow_assignable<T2&, const S&>::value))
    {
       first  = ::boost::move(p.first);
       second = ::boost::move(p.second);
@@ -450,6 +490,8 @@ struct pair
 
    //std::pair move assignment
    pair& operator=(BOOST_RV_REF_BEG std::pair<T1, T2> BOOST_RV_REF_END p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, T1>::value &&
+                         dtl::is_nothrow_assignable<T2&, T2>::value))
    {
       first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
       second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
@@ -458,6 +500,8 @@ struct pair
 
    template <class D, class S>
    pair& operator=(BOOST_RV_REF_BEG std::pair<D, S> BOOST_RV_REF_END p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_assignable<T1&, D>::value &&
+                         dtl::is_nothrow_assignable<T2&, S>::value))
    {
       first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
       second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
@@ -466,6 +510,7 @@ struct pair
 
    //swap
    void swap(pair& p)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_swappable<T1>::value && dtl::is_nothrow_swappable<T2>::value)
    {
       ::boost::adl_move_swap(this->first, p.first);
       ::boost::adl_move_swap(this->second, p.second);
@@ -503,6 +548,7 @@ inline pair<T1, T2> make_pair(T1 x, T2 y)
 
 template <class T1, class T2>
 inline void swap(pair<T1, T2>& x, pair<T1, T2>& y)
+   BOOST_NOEXCEPT_IF(dtl::is_nothrow_swappable<T1>::value && dtl::is_nothrow_swappable<T2>::value)
 {  x.swap(y);  }
 
 }  //namespace dtl {

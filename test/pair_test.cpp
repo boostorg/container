@@ -81,6 +81,84 @@ void test_reference_member_assignment()
    #endif
 }
 
+//An element whose swap can throw (its copy is its move and it is not noexcept)
+struct throwing_copy_member
+{
+   throwing_copy_member() {}
+   throwing_copy_member(const throwing_copy_member &) {}
+   throwing_copy_member &operator=(const throwing_copy_member &) {  return *this;  }
+};
+
+//swap can throw only if the swap of a member can throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+typedef boost::container::dtl::pair<int, int> nothrow_pair_t;
+typedef boost::container::dtl::pair<int, throwing_copy_member> throwing_pair_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nothrow_pair_t&>().swap(boost::move_detail::declval<nothrow_pair_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<throwing_pair_t&>().swap(boost::move_detail::declval<throwing_pair_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nothrow_pair_t&>(), boost::move_detail::declval<nothrow_pair_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(swap(boost::move_detail::declval<throwing_pair_t&>(), boost::move_detail::declval<throwing_pair_t&>())) ));
+
+//Construction and assignment can throw only if the operation of a member can throw
+using boost::move_detail::declval;
+typedef boost::container::dtl::pair<short, short>                 nothrow_src_t;
+typedef boost::container::dtl::pair<short, throwing_copy_member>  throwing_src_t;
+typedef std::pair<int, int>                                       std_nothrow_t;
+typedef std::pair<int, throwing_copy_member>                      std_throwing_t;
+typedef std::pair<short, short>                                   std_nothrow_src_t;
+typedef std::pair<short, throwing_copy_member>                    std_throwing_src_t;
+//Default constructor
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t()) ));
+//Constructor from two values
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<const int&>(), declval<const int&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<const int&>(), declval<const throwing_copy_member&>())) ));
+//Constructor from two forwarded values
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<short>(), declval<long>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<short>(), declval<throwing_copy_member>())) ));
+//Converting copy and move constructors
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<const nothrow_src_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<const throwing_src_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<nothrow_src_t>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<throwing_src_t>())) ));
+//Constructors from std::pair
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<const std_nothrow_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<const std_throwing_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<std_nothrow_t>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<std_throwing_t>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<const std_nothrow_src_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<const std_throwing_src_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(nothrow_pair_t(declval<std_nothrow_src_t>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(throwing_pair_t(declval<std_throwing_src_t>())) ));
+//Copy and move assignments
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<const nothrow_pair_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<const throwing_pair_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<nothrow_pair_t>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<throwing_pair_t>()) ));
+//Converting copy and move assignments
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<const nothrow_src_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<const throwing_src_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<nothrow_src_t>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<throwing_src_t>()) ));
+//Assignments from std::pair
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<const std_nothrow_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<const std_throwing_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<std_nothrow_t>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<std_throwing_t>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<const std_nothrow_src_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<const std_throwing_src_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_pair_t&>() = declval<std_nothrow_src_t>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_pair_t&>() = declval<std_throwing_src_t>()) ));
+//Assignments of a pair with a reference member
+#if defined(BOOST_CONTAINER_HAS_CONDITIONALLY_TRIVIAL_SPECIAL_MEMBERS)
+typedef boost::container::dtl::pair<int&, int>                    nothrow_ref_pair_t;
+typedef boost::container::dtl::pair<throwing_copy_member&, int>   throwing_ref_pair_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_ref_pair_t&>() = declval<const nothrow_ref_pair_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_ref_pair_t&>() = declval<const throwing_ref_pair_t&>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<nothrow_ref_pair_t&>() = declval<nothrow_ref_pair_t>()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_ref_pair_t&>() = declval<throwing_ref_pair_t>()) ));
+#endif
+#endif
+
 int main ()
 {
    {
