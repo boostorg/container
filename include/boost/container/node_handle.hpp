@@ -298,7 +298,7 @@ class node_handle
    //! <b>Returns</b>: A copy of the internally hold allocator.
    //!
    //! <b>Throws</b>: Nothing.
-   allocator_type get_allocator() const
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!empty());
       return this->node_alloc();

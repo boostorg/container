@@ -499,6 +499,16 @@ BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagat
 BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_set_t&>(), boost::move_detail::declval<nonpropagating_set_t&>())) ));
 #endif
 
+//key_comp and value_comp can throw only if the copy of the comparator can throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+typedef boost::container::set<int> plain_set_t;
+typedef boost::container::set<int, boost::container::test::copy_assign_counting_less<int> > copy_less_set_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const plain_set_t&>().key_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<const copy_less_set_t&>().key_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const plain_set_t&>().value_comp()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(boost::move_detail::declval<const copy_less_set_t&>().value_comp()) ));
+#endif
+
 int main ()
 {
    if(!test_unqualified_swap())

@@ -786,10 +786,12 @@ class tree
    // accessors:
    BOOST_CONTAINER_NODISCARD inline
       value_compare value_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value)
    {  return value_compare(this->key_comp()); }
 
    BOOST_CONTAINER_NODISCARD inline
       key_compare key_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value)
    {  return this->icont().key_comp(); }
 
    BOOST_CONTAINER_NODISCARD inline

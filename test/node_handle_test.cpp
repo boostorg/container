@@ -618,6 +618,11 @@ void test_get_release()
    BOOST_TEST(node_t::count == 0);
 }
 
+//get_allocator cannot throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const node_handle_set_t&>().get_allocator()) ));
+#endif
+
 int main()
 {
    test_types();

@@ -855,13 +855,15 @@ class set
    //!   of which a was constructed.
    //!
    //! <b>Complexity</b>: Constant.
-   key_compare key_comp() const;
+   key_compare key_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value);
 
    //! <b>Effects</b>: Returns an object of value_compare constructed out
    //!   of the comparison object.
    //!
    //! <b>Complexity</b>: Constant.
-   value_compare value_comp() const;
+   value_compare value_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value);
 
    //! <b>Returns</b>: An iterator pointing to an element with the key
    //!   equivalent to x, or end() if such an element is not found.
@@ -1697,10 +1699,12 @@ class multiset
    void clear() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::key_comp
-   key_compare key_comp() const;
+   key_compare key_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value);
 
    //! @copydoc ::boost::container::set::value_comp
-   value_compare value_comp() const;
+   value_compare value_comp() const
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value);
 
    //! @copydoc ::boost::container::set::find(const key_type& )
    iterator find(const key_type& x);
