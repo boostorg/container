@@ -268,6 +268,21 @@ void test_empty_allocator_calls()
    BOOST_TEST(r.is_equal(r2));
 }
 
+//The constructors and get_allocator cannot throw: the copy and the move of an allocator cannot throw.
+//The default constructor can throw only if the default constructor of the allocator can throw
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+typedef boost::container::pmr::resource_adaptor<propagation_test_allocator<char, 0> > test_alloc_ra_t;
+typedef boost::container::pmr::resource_adaptor<boost::container::new_allocator<char> > new_alloc_ra_t;
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(new_alloc_ra_t()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(test_alloc_ra_t()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(test_alloc_ra_t(boost::move_detail::declval<const test_alloc_ra_t&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(test_alloc_ra_t(boost::move_detail::declval<test_alloc_ra_t>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(test_alloc_ra_t(boost::move_detail::declval<const propagation_test_allocator<char, 0>&>())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(test_alloc_ra_t(boost::move_detail::declval<propagation_test_allocator<char, 0> >())) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<test_alloc_ra_t&>().get_allocator()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<const test_alloc_ra_t&>().get_allocator()) ));
+#endif
+
 int main()
 {
    test_default_constructor();

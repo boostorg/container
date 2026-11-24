@@ -202,6 +202,10 @@ BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::container_erase_is_nothro
 typedef boost::container::list<int, propagation_test_allocator<int, 0> > nonpropagating_list_t;
 BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::move_detail::declval<nonpropagating_list_t&>().swap(boost::move_detail::declval<nonpropagating_list_t&>())) ));
 BOOST_CONTAINER_STATIC_ASSERT(( noexcept(swap(boost::move_detail::declval<nonpropagating_list_t&>(), boost::move_detail::declval<nonpropagating_list_t&>())) ));
+
+//The default constructor of the iterators cannot throw
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::container::list<int>::iterator()) ));
+BOOST_CONTAINER_STATIC_ASSERT(( noexcept(boost::container::list<int>::const_iterator()) ));
 #endif
 
 int main ()

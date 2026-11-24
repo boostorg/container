@@ -110,29 +110,30 @@ class resource_adaptor_imp
    //! <b>Effects</b>: Default constructs
    //!   m_alloc.
    resource_adaptor_imp()
+      BOOST_NOEXCEPT_IF(boost::move_detail::is_nothrow_default_constructible<Allocator>::value)
    {  this->static_assert_if_not_char_allocator(); }
 
    //! <b>Effects</b>: Copy constructs
    //!   m_alloc.
-   resource_adaptor_imp(const resource_adaptor_imp &other)
+   resource_adaptor_imp(const resource_adaptor_imp &other) BOOST_NOEXCEPT
       : ebo_alloc_t(other.ebo_alloc_t::get())
    {}
 
    //! <b>Effects</b>: Move constructs
    //!   m_alloc.
-   resource_adaptor_imp(BOOST_RV_REF(resource_adaptor_imp) other)
+   resource_adaptor_imp(BOOST_RV_REF(resource_adaptor_imp) other) BOOST_NOEXCEPT
       : ebo_alloc_t(::boost::move(other.get()))
    {}
 
    //! <b>Effects</b>: Initializes m_alloc with
    //!   a2.
-   explicit resource_adaptor_imp(const Allocator& a2)
+   explicit resource_adaptor_imp(const Allocator& a2) BOOST_NOEXCEPT
       : ebo_alloc_t(a2)
    {  this->static_assert_if_not_char_allocator(); }
 
    //! <b>Effects</b>: Initializes m_alloc with
    //!   a2.
-   explicit resource_adaptor_imp(BOOST_RV_REF(Allocator) a2)
+   explicit resource_adaptor_imp(BOOST_RV_REF(Allocator) a2) BOOST_NOEXCEPT
       : ebo_alloc_t(::boost::move(a2))
    {  this->static_assert_if_not_char_allocator(); }
 
@@ -147,11 +148,11 @@ class resource_adaptor_imp
    {  this->ebo_alloc_t::get() = ::boost::move(other.ebo_alloc_t::get()); return *this;  }
 
    //! <b>Effects</b>: Returns m_alloc.
-   allocator_type &get_allocator()
+   allocator_type &get_allocator() BOOST_NOEXCEPT
    {  return this->ebo_alloc_t::get(); }
 
    //! <b>Effects</b>: Returns m_alloc.
-   const allocator_type &get_allocator() const
+   const allocator_type &get_allocator() const BOOST_NOEXCEPT
    {  return this->ebo_alloc_t::get(); }
 
    protected:
@@ -259,22 +260,23 @@ class resource_adaptor
 
    public:
    resource_adaptor()
+      BOOST_NOEXCEPT_IF(boost::move_detail::is_nothrow_default_constructible<typename base_t::allocator_type>::value)
       : base_t()
    {}
 
-   resource_adaptor(const resource_adaptor &other)
+   resource_adaptor(const resource_adaptor &other) BOOST_NOEXCEPT
       : base_t(other)
    {}
 
-   resource_adaptor(BOOST_RV_REF(resource_adaptor) other)
+   resource_adaptor(BOOST_RV_REF(resource_adaptor) other) BOOST_NOEXCEPT
       : base_t(BOOST_MOVE_BASE(base_t, other))
    {}
 
-   explicit resource_adaptor(const Allocator& a2)
+   explicit resource_adaptor(const Allocator& a2) BOOST_NOEXCEPT
       : base_t(a2)
    {}
 
-   explicit resource_adaptor(BOOST_RV_REF(Allocator) a2)
+   explicit resource_adaptor(BOOST_RV_REF(Allocator) a2) BOOST_NOEXCEPT
       : base_t(::boost::move(a2))
    {}
 
