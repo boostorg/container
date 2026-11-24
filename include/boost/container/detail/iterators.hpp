@@ -725,7 +725,7 @@ class iterator_from_iiterator
    typedef typename types_t::iterator_category   iterator_category;
    typedef typename types_t::value_type          value_type;
 
-   inline iterator_from_iiterator()
+   inline iterator_from_iiterator() BOOST_NOEXCEPT_OR_NOTHROW
       : m_iit()
    {}
 

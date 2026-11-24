@@ -22,6 +22,7 @@
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/type_traits.hpp>
 #include <boost/assert.hpp>
 
 namespace boost {
@@ -35,6 +36,7 @@ inline void swap_alloc(AllocatorType &, AllocatorType &, dtl::false_type)
 
 template<class AllocatorType>
 inline void swap_alloc(AllocatorType &l, AllocatorType &r, dtl::true_type)
+   BOOST_NOEXCEPT_OR_NOTHROW
 {  boost::adl_move_swap(l, r);   }
 
 template<class AllocatorType>
@@ -44,6 +46,7 @@ inline void assign_alloc(AllocatorType &, const AllocatorType &, dtl::false_type
 
 template<class AllocatorType>
 inline void assign_alloc(AllocatorType &l, const AllocatorType &r, dtl::true_type)
+   BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_assignable<AllocatorType>::value)
 {  l = r;   }
 
 template<class AllocatorType>
@@ -53,6 +56,7 @@ inline void move_alloc(AllocatorType &, AllocatorType &, dtl::false_type)
 
 template<class AllocatorType>
 inline void move_alloc(AllocatorType &l, AllocatorType &r, dtl::true_type)
+   BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<AllocatorType>::value)
 {  l = ::boost::move(r);   }
 
 template<class SizeType, class LimitSizeType, bool = sizeof(SizeType)<= sizeof(LimitSizeType)>
