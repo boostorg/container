@@ -1038,7 +1038,8 @@ class list
    //////////////////////////////////////////////
 
    //! <b>Requires</b>: p must point to an element contained
-   //!   by the list. x != *this. this' allocator and x's allocator shall compare equal
+   //!   by the list. x != *this. this' allocator and x's allocator shall compare equal.
+   //!   size() + x.size() <= max_size().
    //!
    //! <b>Effects</b>: Transfers all the elements of list x to this list, before the
    //!   the element pointed by p. No destructors or copy constructors are called.
@@ -1054,11 +1055,13 @@ class list
       BOOST_ASSERT((priv_is_linked)(p));
       BOOST_ASSERT(this != &x);
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
+      BOOST_ASSERT(this->priv_can_add(x.size()));
       this->icont().splice(p.get(), x.icont());
    }
 
    //! <b>Requires</b>: p must point to an element contained
-   //!   by the list. x != *this. this' allocator and x's allocator shall compare equal
+   //!   by the list. x != *this. this' allocator and x's allocator shall compare equal.
+   //!   size() + x.size() <= max_size().
    //!
    //! <b>Effects</b>: Transfers all the elements of list x to this list, before the
    //!   the element pointed by p. No destructors or copy constructors are called.
@@ -1077,6 +1080,7 @@ class list
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. i must point to an element contained in list x.
+   //!   If x is not *this, size() < max_size().
    //!   this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
@@ -1093,11 +1097,13 @@ class list
    {
       BOOST_ASSERT((priv_is_linked)(p));
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
+      BOOST_ASSERT(this == &x || this->priv_can_add(1u));
       this->icont().splice(p.get(), x.icont(), i.get());
    }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. i must point to an element contained in list x.
+   //!   If x is not *this, size() < max_size().
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
@@ -1119,6 +1125,7 @@ class list
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
+   //!   If x is not *this, size() + distance(first, last) <= max_size().
    //!   this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
@@ -1136,11 +1143,13 @@ class list
       BOOST_ASSERT(first == last || (first != x.cend() && x.priv_is_linked(first)));
       BOOST_ASSERT(first == last || x.priv_is_linked(last));
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
+      BOOST_ASSERT(this == &x || this->priv_can_add(static_cast<size_type>(boost::container::iterator_udistance(first, last))));
       this->icont().splice(p.get(), x.icont(), first.get(), last.get());
    }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
+   //!   If x is not *this, size() + distance(first, last) <= max_size().
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
@@ -1161,6 +1170,7 @@ class list
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
+   //!   If x is not *this, size() + distance(first, last) <= max_size().
    //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
@@ -1177,11 +1187,13 @@ class list
    void splice(const_iterator p, list &x, const_iterator first, const_iterator last, size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
+      BOOST_ASSERT(this == &x || this->priv_can_add(n));
       this->icont().splice(p.get(), x.icont(), first.get(), last.get(), n);
    }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
+   //!   If x is not *this, size() + distance(first, last) <= max_size().
    //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
@@ -1267,7 +1279,9 @@ class list
    //!   that is, if an element from *this is equivalent to one from x, then the element
    //!   from *this will precede the one from x.
    //!
-   //! <b>Throws</b>: If comparison throws.
+   //! <b>Throws</b>: If comparison throws, or
+   //!   length_error if x is not *this and size() + x.size() > max_size().
+   //!   In that case neither *this nor x is changed.
    //!
    //! <b>Complexity</b>: This function is linear time: it performs at most
    //!   size() + x.size() - 1 comparisons.
@@ -1280,7 +1294,9 @@ class list
    //!   that is, if an element from *this is equivalent to one from x, then the element
    //!   from *this will precede the one from x.
    //!
-   //! <b>Throws</b>: If comparison throws.
+   //! <b>Throws</b>: If comparison throws, or
+   //!   length_error if x is not *this and size() + x.size() > max_size().
+   //!   In that case neither *this nor x is changed.
    //!
    //! <b>Complexity</b>: This function is linear time: it performs at most
    //!   size() + x.size() - 1 comparisons.
@@ -1295,7 +1311,9 @@ class list
    //!   in order into *this. The merge is stable; that is, if an element from *this is
    //!   equivalent to one from x, then the element from *this will precede the one from x.
    //!
-   //! <b>Throws</b>: If comp throws.
+   //! <b>Throws</b>: If comp throws, or
+   //!   length_error if x is not *this and size() + x.size() > max_size().
+   //!   In that case neither *this nor x is changed.
    //!
    //! <b>Complexity</b>: This function is linear time: it performs at most
    //!   size() + x.size() - 1 comparisons.
@@ -1307,6 +1325,9 @@ class list
       //Boost.Intrusive merge has no effect if &x == this
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
       typedef value_to_node_compare<Node, StrictWeakOrdering> value_to_node_compare_type;
+      if(this != &x && !this->priv_can_add(x.size())){
+         throw_length_error("list::merge max_size() exceeded");
+      }
       this->icont().merge(x.icont(), value_to_node_compare_type(comp));
    }
 
@@ -1318,7 +1339,9 @@ class list
    //!   in order into *this. The merge is stable; that is, if an element from *this is
    //!   equivalent to one from x, then the element from *this will precede the one from x.
    //!
-   //! <b>Throws</b>: If comp throws.
+   //! <b>Throws</b>: If comp throws, or
+   //!   length_error if x is not *this and size() + x.size() > max_size().
+   //!   In that case neither *this nor x is changed.
    //!
    //! <b>Complexity</b>: This function is linear time: it performs at most
    //!   size() + x.size() - 1 comparisons.
@@ -1445,6 +1468,15 @@ class list
          this->assign(boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));
       }
    }
+
+   //Returns true if n elements can be added without exceeding max_size().
+   //If size_type is narrower than the address space, two lists with valid sizes
+   //can hold more elements than size_type can represent, and the size counter of
+   //the destination would wrap. Splice cannot throw and the standard does not
+   //specify this case, so for splice it is a precondition checked with an
+   //assertion. Merge can throw, so it throws length_error.
+   bool priv_can_add(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return n <= size_type(this->max_size() - this->size());  }
 
    static bool priv_is_linked(const_iterator const position)
    {
