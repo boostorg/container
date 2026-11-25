@@ -318,6 +318,15 @@ does not internally perform any value_type destruction, copy/move construction/a
 corresponding to the insertion of new elements or deletion of stored elements, which can sometimes compensate in terms of
 performance for the extra burden of doing more pointer manipulation and an additional allocation per element.
 
+[*Splicing]. As each element has its own node, [classref boost::container::stable_vector stable_vector] has
+the `splice` overloads of `list`: they transfer all the elements of another
+[classref boost::container::stable_vector stable_vector], one element or a range of elements before a position.
+Only node pointers are transferred: no element is copied, moved or destroyed, and references, pointers and
+iterators to the transferred elements stay valid. The allocators must compare equal. A transfer from another
+container can throw if the index of the destination must grow, and then neither container changes.
+A range or one element can also be moved inside the same container: this only changes the order of the index
+and cannot throw.
+
 [*Exception safety]. (according to [@http://www.boost.org/community/exception_safety.html Abrahams' terminology])
 As [classref boost::container::stable_vector stable_vector] does not internally copy/move elements around, some
 operations provide stronger exception safety guarantees than in vector:
@@ -2962,6 +2971,11 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 [section:release_notes_boost_1_94_00 Boost 1.94 Release]
 
+* [classref boost::container::stable_vector stable_vector] has the `splice` overloads of `list`. They transfer
+  elements between two `stable_vector`s with equal allocators, or inside one `stable_vector`,
+  without copying, moving or destroying them
+  ([@https://github.com/boostorg/container/pull/349 GitHub #349: ['"stable_vector: add the splice() overloads of std::list"]]).
+
 * [*ABI Breaking]: [classref boost::container::slist slist] is now a linear list: the last node points to null instead of the header.
   Move construction, move assignment, swap and the allocator-extended move constructor with equal allocators
   now take constant time instead of linear time. `before_begin()` is no longer equal to `end()`, and `previous(begin())`
@@ -2979,6 +2993,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
   the previous versions did not implement correctly by mistake.
   Define `BOOST_CONTAINER_HINT_NODE_INSERT_RETURNS_INSERT_RETURN_TYPE` to get the previous behaviour. This macro
   is deprecated and a compilation message is shown when it is used (`BOOST_DISABLE_PRAGMA_MESSAGE` hides it).
+
+* Fixed bugs/issues/enhancements:
+   * [@https://github.com/boostorg/container/pull/349 GitHub #349: ['"stable_vector: add the splice() overloads of std::list"]].
 
 [endsect]
 

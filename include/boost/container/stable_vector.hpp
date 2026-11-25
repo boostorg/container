@@ -471,15 +471,17 @@ class stable_vector_iterator
 
    #if defined(STABLE_VECTOR_ENABLE_INVARIANT_CHECKING)
 
-      #define BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT \
-               invariant_checker BOOST_JOIN(check_invariant_,__LINE__)(*this); \
+      #define BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT_OF(c) \
+               invariant_checker BOOST_JOIN(check_invariant_,__LINE__)(c); \
                BOOST_JOIN(check_invariant_,__LINE__).touch();
 
    #else //STABLE_VECTOR_ENABLE_INVARIANT_CHECKING
 
-      #define BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT
+      #define BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT_OF(c)
 
    #endif   //#if defined(STABLE_VECTOR_ENABLE_INVARIANT_CHECKING)
+
+   #define BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT_OF(*this)
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1858,6 +1860,99 @@ class stable_vector
       return iterator(last.node_pointer());
    }
 
+   //! <b>Requires</b>: p must be a valid iterator of *this. x must not be *this.
+   //!   The allocator of x must compare equal to the allocator of *this.
+   //!
+   //! <b>Effects</b>: Transfers all the elements of x to *this, before p. No element
+   //!   is copied, moved or destroyed. x is empty after the call.
+   //!
+   //! <b>Throws</b>: if size() + x.size() > max_size(), or
+   //!   if the index of *this must grow and the allocation fails. In both cases
+   //!   neither *this nor x is changed.
+   //!
+   //! <b>Complexity</b>: Linear to x.size() plus the number of elements of *this
+   //!   from p to the end.
+   //!
+   //! <b>Note</b>: Iterators, pointers and references to the elements of x remain valid
+   //!   and refer to the same elements, which are now elements of *this.
+   //!   Iterators of *this from p to the end are invalidated.
+   void splice(const_iterator p, stable_vector &x)
+   {
+      BOOST_ASSERT(this != &x);
+      this->splice(p, x, x.cbegin(), x.cend());
+   }
+
+   //! <b>Effects</b>: Same as splice(p, x), with x an rvalue.
+   inline void splice(const_iterator p, BOOST_RV_REF(stable_vector) x)
+   {  this->splice(p, static_cast<stable_vector&>(x));  }
+
+   //! <b>Requires</b>: p must be a valid iterator of *this. i must be a valid
+   //!   dereferenceable iterator of x. The allocator of x must compare equal to
+   //!   the allocator of *this. x can be *this.
+   //!
+   //! <b>Effects</b>: Transfers the element pointed by i from x to *this, before p.
+   //!   No element is copied, moved or destroyed. If p == i or p == i + 1, there are
+   //!   no effects.
+   //!
+   //! <b>Throws</b>: If x is *this, nothing. Otherwise, if
+   //!   size() == max_size(), or if the index of *this must grow
+   //!   and the allocation fails. In both cases neither *this nor x is changed.
+   //!
+   //! <b>Complexity</b>: If x is *this, linear to the distance between p and i.
+   //!   Otherwise, linear to the number of elements of *this from p to the end plus
+   //!   the number of elements of x after i.
+   //!
+   //! <b>Note</b>: Iterators, pointers and references to the element remain valid and
+   //!   refer to the same element.
+   void splice(const_iterator p, stable_vector &x, const_iterator i)
+   {
+      BOOST_ASSERT(x.priv_in_range(i));
+      const_iterator n(i);
+      this->splice(p, x, i, ++n);
+   }
+
+   //! <b>Effects</b>: Same as splice(p, x, i), with x an rvalue.
+   inline void splice(const_iterator p, BOOST_RV_REF(stable_vector) x, const_iterator i)
+   {  this->splice(p, static_cast<stable_vector&>(x), i);  }
+
+   //! <b>Requires</b>: p must be a valid iterator of *this. [first, last) must be a
+   //!   valid range of x. The allocator of x must compare equal to the allocator of
+   //!   *this. x can be *this, but then p must not be in the range (first, last).
+   //!
+   //! <b>Effects</b>: Transfers the elements in [first, last) from x to *this, before p.
+   //!   No element is copied, moved or destroyed.
+   //!
+   //! <b>Throws</b>: If x is *this, nothing. Otherwise, if
+   //!   size() + distance(first, last) > max_size(), or if the index of
+   //!   *this must grow and the allocation fails. In both cases neither *this nor x
+   //!   is changed.
+   //!
+   //! <b>Complexity</b>: If x is *this, linear to the distance between the first and the
+   //!   last of p, first and last. Otherwise, linear to distance(first, last) plus the
+   //!   number of elements of *this from p to the end plus the number of elements of x
+   //!   from last to the end.
+   //!
+   //! <b>Note</b>: Iterators, pointers and references to the transferred elements remain
+   //!   valid and refer to the same elements.
+   void splice(const_iterator p, stable_vector &x, const_iterator first, const_iterator last)
+   {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
+      BOOST_ASSERT(first == last ||
+         (first < last && x.priv_in_range(first) && x.priv_in_range_or_end(last)));
+      BOOST_ASSERT(this->priv_node_alloc() == x.priv_node_alloc());
+      if(this == &x){
+         BOOST_ASSERT(p <= first || last <= p);
+         this->priv_splice_self(p, first, last);
+      }
+      else{
+         this->priv_splice_other(p, x, first, last);
+      }
+   }
+
+   //! <b>Effects</b>: Same as splice(p, x, first, last), with x an rvalue.
+   inline void splice(const_iterator p, BOOST_RV_REF(stable_vector) x, const_iterator first, const_iterator last)
+   {  this->splice(p, static_cast<stable_vector&>(x), first, last);  }
+
    //! <b>Effects</b>: Removes all the elements that compare equal to value.
    //!
    //! <b>Throws</b>: If comparison throws. The elements that are not compared yet are kept.
@@ -2055,6 +2150,63 @@ class stable_vector
       }
       else {
          this->assign(boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));
+      }
+   }
+
+   void priv_splice_self(const_iterator p, const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT;
+      const const_iterator cbeg(this->cbegin());
+      const difference_type dp = p - cbeg;
+      const difference_type df = first - cbeg;
+      const difference_type dl = last - cbeg;
+      const index_iterator ib(this->index.begin());
+      //Only the order of the index changes: no allocation is needed
+      if(dp < df){
+         boost::movelib::rotate_gcd(ib + dp, ib + df, ib + dl);
+         index_traits_type::fix_up_pointers(ib + dp, ib + dl);
+      }
+      else if(dl < dp){
+         boost::movelib::rotate_gcd(ib + df, ib + dl, ib + dp);
+         index_traits_type::fix_up_pointers(ib + df, ib + dp);
+      }
+   }
+
+   void priv_splice_other(const_iterator p, stable_vector &x, const_iterator first, const_iterator last)
+   {
+      BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT;
+      BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT_OF(x);
+      const size_type num = static_cast<size_type>(last - first);
+      if(!num){
+         return;
+      }
+      if(num > size_type(this->max_size() - this->size())){
+         throw_length_error("stable_vector::splice max_size() exceeded");
+      }
+      const difference_type idx   = p - this->cbegin();
+      const difference_type x_idx = first - x.cbegin();
+      //The next two steps can throw. Then neither container is changed: initialize_end_node
+      //allocates only the index of an empty container, with room for the num new pointers,
+      //and the insertion has the strong guarantee
+      index_traits_type::initialize_end_node(this->index, this->internal_data.end_node, num);
+      const node_base_ptr_ptr old_buffer = this->index.data();
+      const index_iterator x_first(x.index.begin() + x_idx);
+      const index_iterator x_last (x_first + difference_type(num));
+      const index_iterator ins = this->index.insert(this->index.begin() + idx, x_first, x_last);
+      index_traits_type::fix_up_pointers_from
+         (this->index, this->index.data() != old_buffer ? this->index.begin() : ins);
+      //The nodes now belong to *this: remove them from the index of x
+      const index_iterator e = x.index.erase(x_first, x_last);
+      index_traits_type::fix_up_pointers_from(x.index, e);
+      //Move the pool nodes of *this that do not fit to the pool of x. They fit there.
+      const size_type spare = size_type(this->index.capacity() - this->index.size());
+      if(this->internal_data.pool_size > spare){
+         multiallocation_chain holder;
+         for(size_type n = size_type(this->internal_data.pool_size - spare); n; --n){
+            holder.push_front(this->priv_get_from_pool());
+         }
+         x.priv_put_in_pool(holder);
+         BOOST_ASSERT(x.internal_data.pool_size <= size_type(x.index.capacity() - x.index.size()));
       }
    }
 
@@ -2449,6 +2601,7 @@ stable_vector(InputIterator, InputIterator, Allocator const&) ->
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #undef BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT
+#undef BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT_OF
 
 //! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
 //!   The other elements are not moved: references and iterators to them stay valid.

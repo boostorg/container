@@ -285,6 +285,349 @@ bool test_remove_members()
    return true;
 }
 
+inline int splice_value(int v)
+{  return v;  }
+
+inline int splice_value(const test::non_copymovable_int &v)
+{  return v.get_int();  }
+
+//Checks that c holds the values of v, in order, through iterators and operator[]
+template<class Cont>
+bool splice_check(const Cont &c, const int *v, std::size_t n)
+{
+   if(c.size() != n)
+      return false;
+   std::size_t i = 0;
+   for(typename Cont::const_iterator it = c.begin(); it != c.end(); ++it, ++i){
+      if(splice_value(*it) != v[i] || splice_value(c[i]) != v[i])
+         return false;
+   }
+   return true;
+}
+
+//Checks that c holds the values first, first + 1, ... in order
+template<class Cont>
+bool splice_check_sequence(const Cont &c, int first, std::size_t n)
+{
+   if(c.size() != n)
+      return false;
+   for(std::size_t i = 0; i != n; ++i){
+      if(splice_value(c[i]) != first + int(i))
+         return false;
+   }
+   return true;
+}
+
+//Elements are transferred between two containers without copies, moves or destructions
+bool test_splice_other()
+{
+   typedef stable_vector<test::non_copymovable_int> cont;
+   {
+      cont a, b, c;
+      for(int i = 0; i < 5; ++i)
+         a.emplace_back(i);         //0 1 2 3 4
+      for(int i = 10; i < 13; ++i)
+         b.emplace_back(i);         //10 11 12
+      const unsigned int count = test::non_copymovable_int::count;
+      const test::non_copymovable_int *const p11 = &b[1], *const p2 = &a[2], *const p4 = &a[4];
+      const cont::const_iterator b_end = b.cend();
+
+      //All of b, in the middle of a
+      a.splice(a.cbegin() + 2, b);
+      {  const int v[] = { 0, 1, 10, 11, 12, 2, 3, 4 };
+         if(!splice_check(a, v, 8u) || !b.empty() || b.cend() != b_end)
+            return false;
+      }
+      if(&a[3] != p11 || &a[5] != p2 || &a[7] != p4)
+         return false;
+
+      //One element, into an empty container
+      c.splice(c.cend(), a, a.cbegin() + 3);
+      {  const int v[] = { 11 }, w[] = { 0, 1, 10, 12, 2, 3, 4 };
+         if(!splice_check(c, v, 1u) || !splice_check(a, w, 7u) || &c[0] != p11)
+            return false;
+      }
+
+      //A range at the end of a, to the beginning of c
+      c.splice(c.cbegin(), a, a.cbegin() + 4, a.cend());
+      {  const int v[] = { 2, 3, 4, 11 }, w[] = { 0, 1, 10, 12 };
+         if(!splice_check(c, v, 4u) || !splice_check(a, w, 4u) || &c[0] != p2 || &c[2] != p4)
+            return false;
+      }
+
+      //An empty range has no effects
+      a.splice(a.cend(), c, c.cbegin() + 1, c.cbegin() + 1);
+      {  const int v[] = { 2, 3, 4, 11 }, w[] = { 0, 1, 10, 12 };
+         if(!splice_check(c, v, 4u) || !splice_check(a, w, 4u))
+            return false;
+      }
+
+      //The rvalue overloads
+      c.splice(c.cend(), boost::move(a), a.cbegin());
+      c.splice(c.cbegin(), boost::move(a), a.cbegin() + 1, a.cend());
+      {  const int v[] = { 10, 12, 2, 3, 4, 11, 0 }, w[] = { 1 };
+         if(!splice_check(c, v, 7u) || !splice_check(a, w, 1u))
+            return false;
+      }
+      a.splice(a.cbegin(), boost::move(c));
+      {  const int v[] = { 10, 12, 2, 3, 4, 11, 0, 1 };
+         if(!splice_check(a, v, 8u) || !c.empty())
+            return false;
+      }
+
+      //No element was constructed or destroyed
+      if(test::non_copymovable_int::count != count)
+         return false;
+
+      //Both containers work as usual after the splice
+      a.erase(a.cbegin() + 2);
+      a.emplace(a.cbegin(), 7);
+      c.emplace_back(20);
+      c.splice(c.cbegin(), a);
+      {  const int v[] = { 7, 10, 12, 3, 4, 11, 0, 1, 20 };
+         if(!splice_check(c, v, 9u) || !a.empty())
+            return false;
+      }
+   }
+   {  //Many elements: the index of the receiving container grows, and back
+      cont a, b;
+      a.emplace_back(-1);
+      a.emplace_back(-2);
+      for(int i = 0; i < 1000; ++i)
+         b.emplace_back(i);
+      const test::non_copymovable_int *const p0 = &b[0], *const p999 = &b[999];
+      a.splice(a.cbegin() + 1, b);
+      if(a.size() != 1002u || !b.empty() || &a[1] != p0 || &a[1000] != p999)
+         return false;
+      b.splice(b.cend(), a, a.cbegin() + 1, a.cbegin() + 1001);
+      if(!splice_check_sequence(b, 0, 1000u) || a.size() != 2u || &b[0] != p0 || &b[999] != p999)
+         return false;
+      //One element each time
+      while(!b.empty())
+         a.splice(a.cend() - 1, b, b.cbegin());
+      if(a.size() != 1002u || a[0].get_int() != -1 || a[1001].get_int() != -2 || &a[1] != p0 || &a[1000] != p999)
+         return false;
+   }
+   return true;
+}
+
+//The receiving container has free nodes in its pool. The index must keep room for them
+bool test_splice_other_with_pool()
+{
+   typedef stable_vector<int> cont;
+   cont r, s;
+   //Free nodes after reserve
+   r.reserve(100u);
+   const cont::size_type cap = r.capacity();
+   for(int i = 0; i < 50; ++i)
+      s.push_back(i);
+   r.splice(r.cend(), s);
+   if(!splice_check_sequence(r, 0, 50u) || !s.empty() || r.capacity() < cap)
+      return false;
+   //The free nodes of r that do not fit in its index were moved to the pool of s
+   if(s.capacity() < 50u)
+      return false;
+   for(int i = 0; i < 50; ++i)
+      s.push_back(i);
+   if(!splice_check_sequence(s, 0, 50u))
+      return false;
+   s.clear();
+   //The new elements use the free nodes
+   for(int i = 50; i < 100; ++i)
+      r.push_back(i);
+   if(!splice_check_sequence(r, 0, 100u))
+      return false;
+   //Free nodes after erase
+   r.erase(r.cbegin(), r.cbegin() + 60);
+   for(int i = 0; i < 30; ++i)
+      s.push_back(i);
+   r.splice(r.cbegin(), s, s.cbegin() + 10, s.cend());
+   if(!splice_check_sequence(s, 0, 10u) || r.size() != 60u || r[0] != 10 || r[19] != 29 || r[20] != 60 || r[59] != 99)
+      return false;
+   r.splice(r.cbegin() + 20, s);
+   if(r.size() != 70u || !s.empty() || r[19] != 29 || r[20] != 0 || r[29] != 9 || r[30] != 60)
+      return false;
+   for(int i = 0; i < 100; ++i)
+      r.push_back(i);
+   r.shrink_to_fit();
+   return r.size() == 170u && r[0] == 10 && r[20] == 0 && r[30] == 60 && r[69] == 99 && r[169] == 99;
+}
+
+//Splice inside one container only changes the order of the elements
+bool test_splice_self()
+{
+   typedef stable_vector<int> cont;
+   cont c;
+   for(int i = 0; i < 10; ++i)
+      c.push_back(i);
+   const int *addr[10];
+   for(int i = 0; i < 10; ++i)
+      addr[i] = &c[cont::size_type(i)];
+   const cont::const_iterator e = c.cend();
+
+   //Range after p
+   c.splice(c.cbegin() + 1, c, c.cbegin() + 5, c.cbegin() + 8);
+   {  const int v[] = { 0, 5, 6, 7, 1, 2, 3, 4, 8, 9 };
+      if(!splice_check(c, v, 10u))
+         return false;
+   }
+   //Range before p
+   c.splice(c.cend(), c, c.cbegin(), c.cbegin() + 2);
+   {  const int v[] = { 6, 7, 1, 2, 3, 4, 8, 9, 0, 5 };
+      if(!splice_check(c, v, 10u))
+         return false;
+   }
+   //p == first and p == last have no effects, as an empty range
+   c.splice(c.cbegin() + 3, c, c.cbegin() + 3, c.cbegin() + 5);
+   c.splice(c.cbegin() + 5, c, c.cbegin() + 3, c.cbegin() + 5);
+   c.splice(c.cbegin(), c, c.cbegin() + 4, c.cbegin() + 4);
+   {  const int v[] = { 6, 7, 1, 2, 3, 4, 8, 9, 0, 5 };
+      if(!splice_check(c, v, 10u))
+         return false;
+   }
+   //One element
+   c.splice(c.cbegin(), c, c.cend() - 1);
+   c.splice(c.cbegin() + 2, c, c.cbegin() + 1);   //p == i + 1: no effects
+   c.splice(c.cbegin() + 2, c, c.cbegin() + 2);   //p == i: no effects
+   c.splice(c.cend(), c, c.cbegin() + 2);
+   {  const int v[] = { 5, 6, 1, 2, 3, 4, 8, 9, 0, 7 };
+      if(!splice_check(c, v, 10u))
+         return false;
+   }
+   //The rvalue overloads
+   c.splice(c.cbegin(), boost::move(c), c.cend() - 2, c.cend());
+   c.splice(c.cend(), boost::move(c), c.cbegin() + 2);
+   {  const int v[] = { 0, 7, 6, 1, 2, 3, 4, 8, 9, 5 };
+      if(!splice_check(c, v, 10u))
+         return false;
+   }
+   //The elements were not moved and end() is still valid
+   for(cont::size_type i = 0; i != c.size(); ++i){
+      if(&c[i] != addr[c[i]])
+         return false;
+   }
+   return c.cend() == e;
+}
+
+#ifndef BOOST_NO_EXCEPTIONS
+
+struct splice_alloc_state
+{
+   static bool throw_on_allocate;
+};
+
+bool splice_alloc_state::throw_on_allocate = false;
+
+//Allocator with a small max_size() that throws on request
+template<class T>
+class splice_test_allocator
+{
+   public:
+   typedef T value_type;
+
+   template<class U>
+   struct rebind
+   {  typedef splice_test_allocator<U> other;  };
+
+   splice_test_allocator()
+   {}
+
+   template<class U>
+   splice_test_allocator(const splice_test_allocator<U> &)
+   {}
+
+   T* allocate(std::size_t n)
+   {
+      if(splice_alloc_state::throw_on_allocate)
+         throw std::bad_alloc();
+      return static_cast<T*>(::operator new(n*sizeof(T)));
+   }
+
+   void deallocate(T *p, std::size_t)
+   {  ::operator delete(p);  }
+
+   std::size_t max_size() const
+   {  return 300u;  }
+
+   friend bool operator==(const splice_test_allocator &, const splice_test_allocator &)
+   {  return true;  }
+
+   friend bool operator!=(const splice_test_allocator &, const splice_test_allocator &)
+   {  return false;  }
+};
+
+//If splice throws, neither container changes
+bool test_splice_exceptions()
+{
+   typedef stable_vector<int, splice_test_allocator<int> > cont;
+   {  //length_error: the result would be greater than max_size()
+      cont a, b;
+      for(int i = 0; i < 205; ++i)
+         a.push_back(i);
+      for(int i = 0; i < 150; ++i)
+         b.push_back(1000 + i);
+      bool thrown = false;
+      try{
+         a.splice(a.cbegin() + 10, b);
+      }
+      catch(length_error_t &){
+         thrown = true;
+      }
+      if(!thrown || !splice_check_sequence(a, 0, 205u) || !splice_check_sequence(b, 1000, 150u))
+         return false;
+      thrown = false;
+      try{
+         a.splice(a.cbegin(), b, b.cbegin() + 50, b.cbegin() + 150);
+      }
+      catch(length_error_t &){
+         thrown = true;
+      }
+      if(!thrown || !splice_check_sequence(a, 0, 205u) || !splice_check_sequence(b, 1000, 150u))
+         return false;
+      //The result is equal to max_size(): the free nodes of a do not fit in its index
+      //and are moved to the pool of b
+      a.erase(a.cend() - 5, a.cend());
+      b.erase(b.cbegin(), b.cbegin() + 53);
+      if(a.size() + b.size() != a.max_size())
+         return false;
+      a.splice(a.cend(), b);
+      if(a.size() != a.max_size() || !b.empty() || a.capacity() != a.size() || b.capacity() < 58u)
+         return false;
+      if(a[199] != 199 || a[200] != 1053 || a.back() != 1149)
+         return false;
+   }
+   {  //bad_alloc: the index must grow
+      cont a, b;
+      for(int i = 0; i < 10; ++i)
+         a.push_back(i);
+      for(int i = 0; i < 5; ++i)
+         b.push_back(100 + i);
+      a.shrink_to_fit();
+      bool thrown = false;
+      splice_alloc_state::throw_on_allocate = true;
+      try{
+         a.splice(a.cbegin() + 3, b);
+      }
+      catch(std::bad_alloc &){
+         thrown = true;
+      }
+      splice_alloc_state::throw_on_allocate = false;
+      if(!thrown || !splice_check_sequence(a, 0, 10u) || !splice_check_sequence(b, 100, 5u))
+         return false;
+      //Splice inside one container does not allocate
+      splice_alloc_state::throw_on_allocate = true;
+      a.splice(a.cbegin(), a, a.cend() - 2, a.cend());
+      splice_alloc_state::throw_on_allocate = false;
+      a.splice(a.cbegin() + 3, b);
+      const int v[] = { 8, 9, 0, 100, 101, 102, 103, 104, 1, 2, 3, 4, 5, 6, 7 };
+      if(!splice_check(a, v, 15u) || !b.empty())
+         return false;
+   }
+   return true;
+}
+
+#endif   //BOOST_NO_EXCEPTIONS
+
 //The operations of the iterators cannot throw
 #if !defined(BOOST_NO_CXX11_NOEXCEPT)
 BOOST_CONTAINER_STATIC_ASSERT((boost::container::test::random_access_container_iterators_are_nothrow
@@ -451,6 +794,20 @@ int main()
 
    if(!test_remove_members())
       return 1;
+
+   if(!test_splice_other())
+      return 1;
+
+   if(!test_splice_other_with_pool())
+      return 1;
+
+   if(!test_splice_self())
+      return 1;
+
+   #ifndef BOOST_NO_EXCEPTIONS
+   if(!test_splice_exceptions())
+      return 1;
+   #endif
 
    return 0;
 }
